@@ -55,3 +55,11 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# MATLAB
+*.mexmaci
+*.mexmaci64
+*.mexw64
+*.mexw32
+*.mexglx
+*.mexa64
