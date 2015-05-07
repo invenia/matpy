@@ -24,7 +24,7 @@ MEXEXT:=$(shell $(join $(MATDIR),mexext))
 all: buildmex
 
 buildmex:
-	$(MEX) py.cpp -l$(PYNAME) -I$(PYINCLUDEDIR)
+	$(MEX) py.cpp -Dchar16_t=uint16_T -l$(PYNAME) -I$(PYINCLUDEDIR)
 
 clean:
 	rm -f py.$(MEXEXT)
