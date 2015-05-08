@@ -1,6 +1,16 @@
+function suite = TestQuery
+	initTestSuite;
+end
 
+function Setup
+    stmt = sprintf(['actual = -1\n']);
+    py('eval', stmt);
+end
 
-
+function TearDown
+    stmt = sprintf(['actual = -1\n']);
+    py('eval', stmt);
+end
 
 %% Test String Import
 function TestStringImport
