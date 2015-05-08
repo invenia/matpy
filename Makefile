@@ -26,5 +26,8 @@ all: buildmex
 buildmex:
 	$(MEX) py.cpp -Dchar16_t=uint16_T -l$(PYNAME) -I$(PYINCLUDEDIR)
 
+debugmex:
+	$(MEX) -g py.cpp -Dchar16_t=uint16_T -l$(PYNAME) -I$(PYINCLUDEDIR)
+
 clean:
 	rm -f py.$(MEXEXT)

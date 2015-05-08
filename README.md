@@ -41,3 +41,37 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
+
+## Types supported to Import and Export
+
+- String
+- Unicode String (Import only)
+- int8
+- uint8
+- int16
+- uint16
+- int32
+- uint32
+- int64
+- uint64
+- single
+- double
+- logical
+- Matlab structs
+    - structs are exported as python dictionary such that each field is a key in the dictionary and has a corresponding list of values, one for each of the elements of the struct.
+    - only dictionaries in this form can be imported as structs.
+    - ex. s =
+            1x2 struct array with fields:
+                f1
+                f2
+          s(1) =
+                f1: 'v1'
+                f2: 'v2'
+          s(2) =
+                f1: 'v3'
+                f2: 'v4'
+
+          would be exported as:
+          {'f1': ['v1', 'v3'], 'f2': ['v2', 'v3']}
+- Matlab cells
+  - cells are exported as a list of objects
