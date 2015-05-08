@@ -29,8 +29,27 @@ function TestStringImport
 
     py('eval', stmt);
 
-    py_import actual
+    py_import actual;
 
-    assertEqual(expected, actual, 'string import not successful')
+    assertEqual(expected, actual, 'string import not successful');
+
+end
+
+
+%% Test Int8 Export and Import
+function TestInt8ExportImport
+
+    expected = int8(randi([-128,127]));
+    tmp = expected;
+
+    py_export tmp;
+
+    tmp = -2;
+
+    py_import tmp;
+
+    actual = tmp;
+
+    assertEqual(expected, actual, 'int8 export and/or import not successful');
 
 end
