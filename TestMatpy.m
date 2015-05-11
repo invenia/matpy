@@ -192,6 +192,42 @@ end
 %  
 %  end
 
+
+%% Test single Export and Import
+function TestSingleExportImport
+
+    numberType = 'single';
+    expected = single(randomNumber(numberType));
+    tmp = expected;
+
+    py_export tmp;
+    tmp = '';
+    py_import tmp;
+
+    actual = tmp;
+
+    assertEqual(expected, actual, [numberType, ' export and/or import not successful']);
+
+end
+
+
+%% Test double Export and Import
+function TestDoubleExportImport
+
+    numberType = 'double';
+    expected = double(randomNumber(numberType));
+    tmp = expected;
+
+    py_export tmp;
+    tmp = '';
+    py_import tmp;
+
+    actual = tmp;
+
+    assertEqual(expected, actual, [numberType, ' export and/or import not successful']);
+
+end
+
 function randomNum = randomNumber(numberType)
     randomNum = randi(1,1,numberType);
 end
