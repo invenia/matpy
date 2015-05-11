@@ -35,21 +35,147 @@ function TestStringImport
 
 end
 
-
 %% Test Int8 Export and Import
 function TestInt8ExportImport
 
-    expected = int8(randi([-128,127]));
+    numberType = 'int8';
+    expected = int8(randomNumber(numberType));
     tmp = expected;
 
     py_export tmp;
-
-    tmp = -2;
-
+    tmp = '';
     py_import tmp;
 
     actual = tmp;
 
-    assertEqual(expected, actual, 'int8 export and/or import not successful');
+    assertEqual(expected, actual, [numberType, ' export and/or import not successful']);
 
 end
+
+%% Test UInt8 Export and Import
+function TestUInt8ExportImport
+
+    numberType = 'uint8';
+    expected = uint8(randomNumber(numberType));
+    tmp = expected;
+
+    py_export tmp;
+    tmp = '';
+    py_import tmp;
+
+    actual = tmp;
+
+    assertEqual(expected, actual, [numberType, ' export and/or import not successful']);
+
+end
+
+
+%% Test Int16 Export and Import
+function TestInt16ExportImport
+
+    numberType = 'int16';
+    expected = int16(randomNumber(numberType));
+    tmp = expected;
+
+    py_export tmp;
+    tmp = '';
+    py_import tmp;
+
+    actual = tmp;
+
+    assertEqual(expected, actual, [numberType, ' export and/or import not successful']);
+
+end
+
+%% Test UInt16 Export and Import
+function TestUInt16ExportImport
+
+    numberType = 'uint16';
+    expected = uint16(randomNumber(numberType));
+    tmp = expected;
+
+    py_export tmp;
+    tmp = '';
+    py_import tmp;
+
+    actual = tmp;
+
+    assertEqual(expected, actual, [numberType, ' export and/or import not successful']);
+
+end
+
+
+%% Test Int32 Export and Import
+function TestInt32ExportImport
+
+    numberType = 'int32';
+    expected = int32(randomNumber(numberType));
+    tmp = expected;
+
+    py_export tmp;
+    tmp = '';
+    py_import tmp;
+
+    actual = tmp;
+
+    assertEqual(expected, actual, [numberType, ' export and/or import not successful']);
+
+end
+
+%% Test UInt32 Export and Import
+function TestUInt32ExportImport
+
+    numberType = 'uint32';
+    expected = uint32(randomNumber(numberType));
+    tmp = expected;
+
+    py_export tmp;
+    tmp = '';
+    py_import tmp;
+
+    actual = tmp;
+
+    assertEqual(expected, actual, [numberType, ' export and/or import not successful']);
+
+end
+
+
+%% Test Int64 Export and Import
+function TestInt64ExportImport
+
+    numberType = 'int64';
+    expected = int64(intmax(numberType)); % randi does not support 'int64'
+    tmp = expected;
+
+    py_export tmp;
+    tmp = '';
+    py_import tmp;
+
+    actual = tmp;
+
+    assertEqual(expected, actual, [numberType, ' export and/or import not successful']);
+
+end
+
+%  %% Test UInt64 Export and Import
+%  function TestUInt64ExportImport
+%  
+%      numberType = 'uint64';
+%      expected = uint64(intmax(numberType));
+%      tmp = expected;
+%  
+%      py_export tmp;
+%      tmp = '';
+%      py_import tmp;
+%  
+%      actual = tmp;
+%  
+%      assertEqual(expected, actual, [numberType, ' export and/or import not successful']);
+%  
+%  end
+
+function randomNum = randomNumber(numberType)
+    randomNum = randi(1,1,numberType);
+end
+
+
