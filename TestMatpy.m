@@ -3,16 +3,16 @@ function suite = TestQuery
 end
 
 function Setup
-    stmt = sprintf(['actual = -1\n']);
+    stmt = sprintf(['tmp = -1\n']);
     py('eval', stmt);
 end
 
 function TearDown
-    stmt = sprintf(['actual = -1\n']);
+    stmt = sprintf(['tmp = -1\n']);
     py('eval', stmt);
 end
 
-%% Test String Import
+%% Test String Export and Import
 function TestStringImport
 
     symbols = ['a':'z' 'A':'Z' '0':'9'];
@@ -20,18 +20,36 @@ function TestStringImport
     strLength = randi(MAX_ST_LENGTH);
     nums = randi(numel(symbols),[1 strLength]);
     expected = symbols (nums);
+    tmp = expected;
 
-    stmt = sprintf([    
-                        'actual = "' ...
-                        expected ...
-                        '"\n'
-                    ]);
+    py_export tmp;
+    tmp = '';
+    py_import tmp;
+
+    actual = tmp;
+
+    assertEqual(expected, actual, 'string export and/or import not successful');
+
+end
+
+%% Test Unicode String Import
+function TestUnicodeStringImport
+
+    symbols = ['a':'z' 'A':'Z' '0':'9'];
+    MAX_ST_LENGTH = 50;
+    strLength = randi(MAX_ST_LENGTH);
+    nums = randi(numel(symbols),[1 strLength]);
+    expected = symbols (nums);
+
+    stmt = sprintf(['tmp = u"', expected, '"\n']);
 
     py('eval', stmt);
 
-    py_import actual;
+    py_import tmp;
 
-    assertEqual(expected, actual, 'string import not successful');
+    actual = tmp;
+
+    assertEqual(expected, actual, 'unicode string import not successful');
 
 end
 
