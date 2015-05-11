@@ -191,6 +191,12 @@ static mxArray* py2mat(PyObject *o) {
 		*imagData = PyComplex_ImagAsDouble(o);
 		Py_DECREF(o);
 		return a;
+	} else if (PyUnicode_Check(o)) {
+		PyObject *tmp = PyUnicode_AsASCIIString(o);
+		char* tmpString = PyString_AsString(PyObject_Str(tmp));
+		mxArray *a = mxCreateString(tmpString);
+		Py_DECREF(o);
+		return a;
 	} else if (PyString_Check(o)) {
 		mxArray *a = mxCreateString(PyString_AsString(o));
 		Py_DECREF(o);
