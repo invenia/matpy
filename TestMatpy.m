@@ -175,22 +175,40 @@ function TestInt64ExportImport
 
 end
 
-%  %% Test UInt64 Export and Import
-%  function TestUInt64ExportImport
-%  
-%      numberType = 'uint64';
-%      expected = uint64(intmax(numberType));
-%      tmp = expected;
-%  
-%      py_export tmp;
-%      tmp = '';
-%      py_import tmp;
-%  
-%      actual = tmp;
-%  
-%      assertEqual(expected, actual, [numberType, ' export and/or import not successful']);
-%  
-%  end
+% Cannot Import or Export uint64 since uint64 causes matlab to crash
+
+%% Test UInt64 Export, it should fail
+function TestUInt64Export
+
+    function TestFunc
+        numberType = 'uint64';
+        expected = uint64(intmax(numberType));
+        tmp = expected;
+
+        py_export tmp;
+    end
+
+    assertExceptionThrown(@() TestFunc, '');
+
+end
+
+%% Test UInt64 Import, it should fail
+function TestUInt64Import
+
+    function TestFunc
+        numberType = 'uint64';
+        stmt = sprintf([
+                'import numpy\n' ...
+                'tmp = numpy.', numberType, '(1)\n'
+            ]);
+        py('eval', stmt);
+
+        py_import tmp;
+    end
+
+    assertExceptionThrown(@() TestFunc, '');
+
+end
 
 %% Test single Export and Import
 function TestSingleExportImport
@@ -243,6 +261,7 @@ function TestLogicalExportImport
 
 end
 
+% make a random number, to help with tests
 function randomNum = randomNumber(numberType)
     randomNum = randi(1,1,numberType);
 end

@@ -78,13 +78,24 @@ static PyObject* mat2py(const mxArray *a) {
 
 	PyObject *list = PyList_New(nelem);
 	const char *dtype = NULL;
-	if (mxIsCell(a)) {
-		for (int i = 0; i < nelem; i++) {
+	if (mxIsCell(a)) 
+	{
+		dtype = "object";
+
+		for (int i = 0; i < nelem; i++) 
+		{
 			PyObject *item = mat2py(mxGetCell(a, i));
-			PyList_SetItem(list, i, item);
+
+			if(NULL != item)
+			{
+				PyList_SetItem(list, i, item);
+			}
+			else // Failure
+			{
+				mexErrMsgTxt("Unsupported data type in a cell");
+			}
 		}
 		// return list;
-		dtype = "object";
 	} else {
 		if (imagData == NULL) {
 #define CASE(cls,c_type,d_type,py_ctor) case cls: for (int i = 0; i < nelem; i++) { \
@@ -105,7 +116,8 @@ break
 			CASE(mxINT32_CLASS, int, "int32", PyInt_FromLong);
 			CASE(mxUINT32_CLASS, unsigned int, "uint32", PyLong_FromLongLong);
 			CASE(mxINT64_CLASS, long long, "int64", PyLong_FromLongLong);
-			CASE(mxUINT64_CLASS, unsigned long long, "uint64", PyLong_FromUnsignedLongLong);
+			// uint64 can cause matlab to crash
+			// CASE(mxUINT64_CLASS, unsigned long long, "uint64", PyLong_FromUnsignedLongLong);
 			}
 		} else {
 #undef CASE
@@ -126,42 +138,56 @@ break
 			CASE(mxINT32_CLASS, int, "complex128");
 			CASE(mxUINT32_CLASS, unsigned int, "complex128");
 			CASE(mxINT64_CLASS, long long, "complex128");
-			CASE(mxUINT64_CLASS, unsigned long long, "complex128");
+			// uint64 can cause matlab to crash
+			// CASE(mxUINT64_CLASS, unsigned long long, "complex128");
 			}
 		}
 	}
 
-	PyObject *shape = PyList_New(ndims);
-	for (size_t i = 0; i < ndims; i++)
-		PyList_SetItem(shape, i, PyInt_FromLong(dims[i]));
+	PyObject *ret = NULL;
+	if(NULL != dtype)
+	{
+		PyObject *shape = PyList_New(ndims);
+		for (size_t i = 0; i < ndims; i++)
+		{
+			PyList_SetItem(shape, i, PyInt_FromLong(dims[i]));
+		}
 
-	PyObject *args = PyTuple_New(1);
-	PyTuple_SetItem(args, 0, list);
-	PyObject *kwargs = PyDict_New();
-	PyDict_SetItemString(kwargs, "dtype", PyString_FromString(dtype));
+		PyObject *args = PyTuple_New(1);
+		PyTuple_SetItem(args, 0, list);
+		PyObject *kwargs = PyDict_New();
+		PyDict_SetItemString(kwargs, "dtype", PyString_FromString(dtype));
 
-	if (debug) mexPrintf("list = 0x%08X dtype = %s\n", list, dtype);
-	PyObject *ndary = PyObject_Call(np_array_fun, args, kwargs);
-	Py_DECREF(kwargs);
-	Py_DECREF(args);
-	Py_DECREF(list);
-	if (ndary == NULL) {
-		PyErr_Print();
-		mexErrMsgTxt("Error converting Python value");
+		if (debug) mexPrintf("list = 0x%08X dtype = %s\n", list, dtype);
+		PyObject *ndary = PyObject_Call(np_array_fun, args, kwargs);
+		Py_DECREF(kwargs);
+		Py_DECREF(args);
+		if (ndary == NULL) 
+		{
+			PyErr_Print();
+			mexErrMsgTxt("Error converting Python value");
+		}
+
+		if (debug) mexPrintf("ndary = 0x%08X\n", ndary);
+		PyObject *reshape_meth = PyObject_GetAttrString(ndary, "reshape");
+		args = PyTuple_New(1);
+		PyTuple_SetItem(args, 0, shape);
+		kwargs = PyDict_New();
+		PyDict_SetItemString(kwargs, "order", PyString_FromString("F"));
+	
+		ret = PyObject_Call(reshape_meth, args, kwargs);
+		Py_DECREF(args);
+		Py_DECREF(kwargs);
+		Py_DECREF(reshape_meth);
+		Py_DECREF(ndary);
+		Py_DECREF(shape);
 	}
-
-	if (debug) mexPrintf("ndary = 0x%08X\n", ndary);
-	PyObject *reshape_meth = PyObject_GetAttrString(ndary, "reshape");
-	args = PyTuple_New(1);
-	PyTuple_SetItem(args, 0, shape);
-	kwargs = PyDict_New();
-	PyDict_SetItemString(kwargs, "order", PyString_FromString("F"));
-
-	PyObject *ret = PyObject_Call(reshape_meth, args, kwargs);
-	Py_DECREF(args);
-	Py_DECREF(kwargs);
-	Py_DECREF(reshape_meth);
-	Py_DECREF(ndary);
+	else 
+	{
+		mexErrMsgTxt("Unsupported data type");
+	}
+	
+	Py_DECREF(list);
 
 	return ret;
 }
@@ -257,7 +283,8 @@ static mxArray* py2mat(PyObject *o) {
 		CASE("int32", int, mxINT32_CLASS, PyInt_AsLong) else
 		CASE("uint32", unsigned int, mxUINT32_CLASS, PyInt_AsUnsignedLongMask) else
 		CASE("int64", long long, mxINT64_CLASS, PyLong_AsLongLong) else
-		CASE("uint64", double, mxUINT64_CLASS, PyLong_AsUnsignedLongLong) else
+		// uint64 can cause matlab to crash
+		// CASE("uint64", double, mxUINT64_CLASS, PyLong_AsUnsignedLongLong) else
 
 #undef CASE
 #define CASE(str,c_type,cls) \
@@ -338,8 +365,14 @@ static void do_set() {
 	char *var_name = mxArrayToString(prhs[1]);
 	PyObject *var = mat2py(prhs[2]);
 
-	PyDict_SetItemString(globals, var_name, var);
-
+	if(NULL != var)
+	{
+		PyDict_SetItemString(globals, var_name, var);
+	}
+	else 
+	{
+		mexErrMsgTxt("Error while export to Python");
+	}
 	//Py_DECREF(var);
 	mxFree(var_name);
 }
