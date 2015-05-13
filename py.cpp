@@ -74,6 +74,35 @@ static PyObject* mat2py(const mxArray *a) {
 		PyObject *o = PyString_FromString(str);
 		mxFree(str);
 		return o;
+	} else if (mxIsStruct(a)) {
+		PyObject *o = PyDict_New();
+		PyObject *list;
+		PyObject *pyItem;
+		mxArray *item;
+		int i, j;
+		const char *fieldName;
+
+		int nfields = mxGetNumberOfFields(a);
+		if (debug) mexPrintf("nfields = %d, nelem = %d\n", nfields, nelem);
+
+		for(i = 0; i < nfields; i++) {
+			fieldName = mxGetFieldNameByNumber(a, i);
+			list = PyList_New(nelem);
+
+			for(j = 0; j < nelem; j++) {
+				item = mxGetFieldByNumber(a, j, i);
+                if(item == NULL)
+                    mexErrMsgTxt("Null field in struct");
+				pyItem = mat2py(item);
+                if(pyItem == NULL)
+                    mexErrMsgTxt("Unsupported data type struct");
+    			
+                PyList_SetItem(list, j, pyItem);
+            }
+
+            PyDict_SetItemString(o, fieldName, list);
+		}
+		return o;
 	}
 
 	PyObject *list = PyList_New(nelem);
@@ -95,7 +124,7 @@ static PyObject* mat2py(const mxArray *a) {
 				mexErrMsgTxt("Unsupported data type in a cell");
 			}
 		}
-		// return list;
+		return list;
 	} else {
 		if (imagData == NULL) {
 #define CASE(cls,c_type,d_type,py_ctor) case cls: for (int i = 0; i < nelem; i++) { \
@@ -204,8 +233,8 @@ static mxArray* py2mat(PyObject *o) {
 		Py_DECREF(o); \
 		return a; \
 	}
-	CASE(PyInt_Check, int, mxINT32_CLASS, PyInt_AsLong) else
 	CASE(PyBool_Check, bool, mxLOGICAL_CLASS, PyInt_AsLong) else
+	CASE(PyInt_Check, int, mxINT32_CLASS, PyInt_AsLong) else
 	CASE(PyLong_Check, long long, mxINT64_CLASS, PyLong_AsLongLong) else
 	CASE(PyFloat_Check, double, mxDOUBLE_CLASS, PyFloat_AsDouble) else
 	if (PyComplex_Check(o)) {
@@ -312,7 +341,7 @@ static mxArray* py2mat(PyObject *o) {
 		return a;
 	} else if (PySequence_Check(o)) {
 		mwSize nelem = PySequence_Size(o);
-		mwSize dims[] = {nelem, 1};
+		mwSize dims[] = {1, nelem};
 		mxArray *a = mxCreateCellArray(2, dims);
 		if (debug) mexPrintf("a = 0x%08X nelem = %d\n", a, nelem);
 		for (int i = 0; i < nelem; i++) {
@@ -323,7 +352,45 @@ static mxArray* py2mat(PyObject *o) {
 		}
 		Py_DECREF(o);
 		return a;
-	} else {
+	} else if(PyDict_Check(o)){
+		PyObject *keys = PyDict_Keys(o);
+		PyObject *items = PyDict_Values(o);
+		mwSize nfields = PyDict_Size(o);
+		mwSize nelem = PyList_Size(PyList_GetItem(items, 0));
+		char *fieldNames[nfields];
+		int i, j;
+
+		if (debug) mexPrintf("nfields = %d, nelem = %d\n", nfields, nelem);
+
+		// check each field to make sure there is a value for every element in each
+		for(i = 1; i < nfields; i++) {
+			if(nelem != PyList_Size(PyList_GetItem(items, i))) {
+				Py_DECREF(o);
+				mexErrMsgTxt("Incorrect form for struct: Inconsistent number of elements");
+			}
+		}
+
+		for(i = 0; i < nfields; i++) {
+			PyObject *field = PyList_GetItem(keys, i);
+			fieldNames[i] = PyString_AsString(field);
+		}
+
+		mwSize dims[] = {1, nelem};
+		mxArray *a = mxCreateStructArray(2, dims, nfields, (const char**)fieldNames);
+
+		for(i = 0; i < nfields; i++) {
+			PyObject *item = PyList_GetItem(items, i);
+			for(j = 0; j < nelem; j++) {
+				mxArray *mat_item = py2mat(PyList_GetItem(item, j));
+				mxSetFieldByNumber(a, j, i, mat_item);
+			}
+		}
+
+		Py_DECREF(o);
+		Py_DECREF(keys);
+		Py_DECREF(items);
+		return a;
+	} else{
 		Py_DECREF(o);
 		mexErrMsgTxt("Unsupported variable type");
 	}
