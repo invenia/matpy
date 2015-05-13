@@ -188,7 +188,22 @@ function TestUInt64Export
         py_export tmp;
     end
 
-    assertExceptionThrown(@() TestFunc, '');
+    assertExceptionThrown(@() TestFunc, 'matpy:UnsupportedVariableType');
+
+end
+
+%% Test UInt64 in a cell Export, it should fail
+function TestUInt64CellExport
+
+    function TestFunc
+        numberType = 'uint64';
+        expected = {[uint64(intmax(numberType))]};
+        tmp = expected;
+
+        py_export tmp;
+    end
+
+    assertExceptionThrown(@() TestFunc, 'matpy:UnsupportedVariableType');
 
 end
 
@@ -206,7 +221,7 @@ function TestUInt64Import
         py_import tmp;
     end
 
-    assertExceptionThrown(@() TestFunc, '');
+    assertExceptionThrown(@() TestFunc, 'matpy:UnsupportedVariableType');
 
 end
 
@@ -265,6 +280,152 @@ end
 function randomNum = randomNumber(numberType)
     randomNum = randi(1,1,numberType);
 end
+
+%% Test Error Messages %%
+
+%% Test for no input
+function TestNoInput
+
+    function TestFunc
+        py();
+    end
+
+    assertExceptionThrown(@() TestFunc, 'matpy:WrongNumberOfInputs');
+
+end
+
+%% Test for wrong input variable type
+function TestWrongInputVariableTypeInput
+
+    function TestFunc
+        py(0);
+    end
+
+    assertExceptionThrown(@() TestFunc, 'matpy:WrongInputVariableType');
+
+end
+
+%% Test for unrecognized command
+function TestUnrecognizedCommand
+
+    function TestFunc
+        py('not a real command');
+    end
+
+    assertExceptionThrown(@() TestFunc, 'matpy:UnrecognizedCommand');
+
+end
+
+%% Test for eval not enough inputs
+function TestEvalNotEnoughInputs
+
+    function TestFunc
+        py('eval');
+    end
+
+    assertExceptionThrown(@() TestFunc, 'matpy:WrongNumberOfInputs');
+
+end
+
+%% Test for eval wrong input variable type
+function TestEvalInputWrongVariableType
+
+    function TestFunc
+        py('eval', 2);
+    end
+
+    assertExceptionThrown(@() TestFunc, 'matpy:WrongInputVariableType');
+
+end
+
+%% Test for eval python error
+function TestEvalPythonError
+
+    function TestFunc
+        py('eval', 'BAD_PYTHON_COMMAND');
+    end
+
+    assertExceptionThrown(@() TestFunc, 'matpy:PythonError');
+
+end
+
+%% Test for set not enough inputs
+function TestSetNotEnoughInputs
+
+    function TestFunc
+        py('set', 'stillNotEnough');
+    end
+
+    assertExceptionThrown(@() TestFunc, 'matpy:WrongNumberOfInputs');
+
+end
+
+%% Test for set wrong input variable type
+function TestSetInputWrongVariableType
+
+    function TestFunc
+        py('set', 2, 2);
+    end
+
+    assertExceptionThrown(@() TestFunc, 'matpy:WrongInputVariableType');
+
+end
+
+% %% Test for set python error TODO, make py('set', '1', 'hi'); throw an error
+% function TestSetPythonError
+% 
+%     function TestFunc
+%         py('set', '1', 'hi');
+%     end
+% 
+%     assertExceptionThrown(@() TestFunc, 'matpy:PythonError');
+% 
+% end
+
+%% Test for get not enough inputs
+function TestGetNotEnoughInputs
+
+    function TestFunc
+        test = py('get');
+    end
+
+    assertExceptionThrown(@() TestFunc, 'matpy:WrongNumberOfInputs');
+
+end
+
+%% Test for get wrong input variable type
+function TestGetInputWrongVariableType
+
+    function TestFunc
+        test = py('get', 2);
+    end
+
+    assertExceptionThrown(@() TestFunc, 'matpy:WrongInputVariableType');
+
+end
+
+%% Test for get no output variable
+function TestGetNoOuputVariable
+
+    function TestFunc
+        py('get', 'test');
+    end
+
+    assertExceptionThrown(@() TestFunc, 'matpy:NoOutputsVariable');
+
+end
+
+% %% Test for get python error TODO, this tests throws an error in teardown
+% function TestGetPythonError
+% 
+%     function TestFunc
+%         test = py('get', 'Does_not_exist');
+%     end
+% 
+%     assertExceptionThrown(@() TestFunc, 'matpy:PythonError');
+% 
+% end
+
 
 
 
