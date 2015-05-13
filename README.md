@@ -44,31 +44,28 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ## Types supported to Import and Export
 
-String
-Unicode String (Import only)
-int8
-uint8
-int16
-uint16
-int32
-uint32
-int64
-single
-double
-logical
+- String
+- Unicode String (Import only)
+- int8
+- uint8
+- int16
+- uint16
+- int32
+- uint32
+- int64
+- single
+- double
+- logical
 
 ## Types NOT supported to Import and Export
 
-uint64
-    Reason: 
-    When Importing a uint64 type, 
+- uint64
+  * Reason: When Importing a uint64 type, 
     it would be successful on the first attempt, 
     but the next time the code try to run the functions
-        Py_CompileString
-            --OR--
-        PyRun_String
+    Py_CompileString or PyRun_String
     it would cause matlab to crash.
 
-    Instead, the code to Export and Import uint64
+  * Instead, the code to Export and Import uint64
     will now say that it is not supported and output
     an error to matlab 
