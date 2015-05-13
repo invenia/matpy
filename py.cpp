@@ -28,7 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #include <string.h>
 // #include <dlfcn.h>
 
+const char *pyObjectToString(PyObject *pyObject);
+void addVariableToPython(const char* name, PyObject *value);
+
 static PyObject *globals;
+static PyObject *module;
 static int nlhs, nrhs;
 static mxArray **plhs;
 static const mxArray **prhs;
@@ -423,7 +427,8 @@ static void do_get()
 	if (debug) mexPrintf("Evaluating: %s\n", expr);
 	PyCodeObject *code = (PyCodeObject*) Py_CompileString(expr, "no_source", Py_eval_input);
 	mxFree(expr);
-	if (code == NULL) {
+	if (code == NULL) 
+	{
 		PyErr_Print();
 		mexErrMsgIdAndTxt("matpy:PythonError", "Error compiling expression");
 	}
@@ -431,7 +436,9 @@ static void do_get()
 	// PyObject *locals = PyDict_New();
 	PyObject *o = PyEval_EvalCode(code, globals, globals);
 	// Py_DECREF(locals);
-	if (o == NULL) {
+	if (o == NULL) 
+	{
+		PyErr_Print();
 		mexErrMsgIdAndTxt("matpy:PythonError", "Error evaluating Python expression");
 	}
 	Py_DECREF(code);
@@ -459,7 +466,7 @@ static void do_set()
 
 	if(NULL != var)
 	{
-		int success = PyDict_SetItemString(globals, var_name, var);
+		addVariableToPython(var_name, var);
 	}
 	else 
 	{
@@ -509,7 +516,13 @@ void mexFunction(int nlhs_, mxArray *plhs_[], int nrhs_, const mxArray *prhs_[])
 		// dlopen("libpython2.6.so", RTLD_LAZY |RTLD_GLOBAL);
 		Py_Initialize();
 		initaview();
-		globals = PyModule_GetDict(PyImport_AddModule("__main__"));
+        module = PyImport_AddModule("__main__");
+        if (NULL == module) 
+        {
+            PyErr_Print();
+            mexErrMsgIdAndTxt("matpy:NumpyNotAccessible", "numpy not accessible");
+        }
+		globals = PyModule_GetDict(module);
 		PyObject *numpy = PyImport_ImportModule("numpy");
 		if (numpy == NULL) {
 			PyErr_Print();
@@ -558,4 +571,25 @@ void mexFunction(int nlhs_, mxArray *plhs_[], int nrhs_, const mxArray *prhs_[])
 		mexErrMsgIdAndTxt("matpy:UnrecognizedCommand", "Unrecognized cmd");
 	}
 	mxFree(cmd);
+}
+
+void addVariableToPython(const char* name, PyObject *value)
+{
+	int success = PyModule_AddObject(module, name, value);
+
+	if(-1 == success)
+	{
+		const size_t MAX_SIZE = 100;
+		char message[MAX_SIZE];
+		snprintf(message, MAX_SIZE, "Failed to add '%s' to the module\nValue is: %s", name, pyObjectToString(value));
+		mexErrMsgIdAndTxt("matpy:FailedToAddVariableToPython", message);
+	}
+}
+
+const char *pyObjectToString(PyObject *pyObject)
+{
+	PyObject* temp = PyObject_Repr(pyObject);
+	const char *result = PyString_AsString(temp);
+	Py_DECREF(temp);
+	return result;
 }

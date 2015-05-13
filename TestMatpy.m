@@ -487,16 +487,27 @@ function TestGetNoOuputVariable
 
 end
 
-% %% Test for get python error TODO, this tests throws an error in teardown
-% function TestGetPythonError
-% 
-%     function TestFunc
-%         test = py('get', 'Does_not_exist');
-%     end
-% 
-%     assertExceptionThrown(@() TestFunc, 'matpy:PythonError');
-% 
-% end
+%% Test for get python error, evaluation error
+function TestGetPythonEvaluationError
+
+    function TestFunc
+        test = py('get', 'Does_not_exist');
+    end
+
+    assertExceptionThrown(@() TestFunc, 'matpy:PythonError');
+
+end
+
+%% Test for get python error, compilation error
+function TestGetPythonCompilationError
+
+    function TestFunc
+        test = py('get', 'print');
+    end
+
+    assertExceptionThrown(@() TestFunc, 'matpy:PythonError');
+
+end
 
 
 
