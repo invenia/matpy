@@ -92,7 +92,7 @@ static PyObject* mat2py(const mxArray *a) {
 			}
 			else // Failure
 			{
-				mexErrMsgTxt("Unsupported data type in a cell");
+				mexErrMsgIdAndTxt("matpy:UnsupportedVariableType", "Unsupported variable type in a cell");
 			}
 		}
 		// return list;
@@ -165,7 +165,7 @@ break
 		if (ndary == NULL) 
 		{
 			PyErr_Print();
-			mexErrMsgTxt("Error converting Python value");
+			mexErrMsgIdAndTxt("matpy:PythonError", "Error converting Python value");
 		}
 
 		if (debug) mexPrintf("ndary = 0x%08X\n", ndary);
@@ -184,7 +184,7 @@ break
 	}
 	else 
 	{
-		mexErrMsgTxt("Unsupported data type");
+		mexErrMsgIdAndTxt("matpy:UnsupportedVariableType", "Unsupported variable type");
 	}
 	
 	Py_DECREF(list);
@@ -306,7 +306,7 @@ static mxArray* py2mat(PyObject *o) {
 		Py_DECREF(dtype_as_str);
 
 		if (a == NULL) {
-			mexErrMsgTxt("Unsupported data type");
+			mexErrMsgIdAndTxt("matpy:UnsupportedVariableType", "Unsupported variable type");
 		}
 
 		return a;
@@ -325,14 +325,24 @@ static mxArray* py2mat(PyObject *o) {
 		return a;
 	} else {
 		Py_DECREF(o);
-		mexErrMsgTxt("Unsupported variable type");
+		mexErrMsgIdAndTxt("matpy:UnsupportedVariableType", "Unsupported variable type");
 	}
 }
 
-static void do_get() {
-	if (nlhs != 1 || nrhs != 2 || !mxIsChar(prhs[1])) {
-		mexErrMsgTxt("Usage: var = py('get', expr)");
-	}
+static void do_get() 
+{
+    if(nrhs != 2) 
+    {
+        mexErrMsgIdAndTxt("matpy:WrongNumberOfInputs", "Usage: var = py('get', expr)");
+    }
+    if(!mxIsChar(prhs[1])) 
+    {
+        mexErrMsgIdAndTxt("matpy:WrongInputVariableType", "Usage: var = py('get', expr)");
+    }
+    if(nlhs != 1) 
+    {
+        mexErrMsgIdAndTxt("matpy:NoOutputsVariable", "Usage: var = py('get', expr)");
+    }
 
 	char *expr = mxArrayToString(prhs[1]);
 	if (debug) mexPrintf("Evaluating: %s\n", expr);
@@ -340,47 +350,61 @@ static void do_get() {
 	mxFree(expr);
 	if (code == NULL) {
 		PyErr_Print();
-		mexErrMsgTxt("Error compiling expression");
+		mexErrMsgIdAndTxt("matpy:PythonError", "Error compiling expression");
 	}
 
 	// PyObject *locals = PyDict_New();
 	PyObject *o = PyEval_EvalCode(code, globals, globals);
 	// Py_DECREF(locals);
 	if (o == NULL) {
-		mexErrMsgTxt("Error evaluating Python expression");
+		mexErrMsgIdAndTxt("matpy:PythonError", "Error evaluating Python expression");
 	}
 	Py_DECREF(code);
 
 	plhs[0] = py2mat(o);
 	if (plhs[0] == NULL) {
-		mexErrMsgTxt("Error converting to MATLAB variable");
+		mexErrMsgIdAndTxt("matpy:ConversionError", "Error converting to MATLAB variable");
 	}
 }
 
-static void do_set() {
-	if (nrhs != 3 || !mxIsChar(prhs[1])) {
-		mexErrMsgTxt("Usage: py('set', var_name, var)");
-	}
+static void do_set() 
+{
+    
+    if(nrhs != 3) 
+    {
+        mexErrMsgIdAndTxt("matpy:WrongNumberOfInputs", "Usage: py('set', var_name, var)");
+    }
+    if(!mxIsChar(prhs[1])) 
+    {
+        mexErrMsgIdAndTxt("matpy:WrongInputVariableType", "Usage: py('set', var_name, var)");
+    }
 
 	char *var_name = mxArrayToString(prhs[1]);
 	PyObject *var = mat2py(prhs[2]);
 
 	if(NULL != var)
 	{
-		PyDict_SetItemString(globals, var_name, var);
+		int success = PyDict_SetItemString(globals, var_name, var);
 	}
 	else 
 	{
-		mexErrMsgTxt("Error while export to Python");
+		mexErrMsgIdAndTxt("matpy:ExportError", "Error while export to Python");
 	}
 	//Py_DECREF(var);
 	mxFree(var_name);
 }
 
-static void do_eval() {
-	if (nrhs != 2 || !mxIsChar(prhs[1])) {
-		mexErrMsgTxt("Usage: py('eval', stmt)");
-	}
+static void do_eval() 
+{
+    
+    if(nrhs != 2) 
+    {
+        mexErrMsgIdAndTxt("matpy:WrongNumberOfInputs", "Usage: py('eval', stmt)");
+    }
+    if(!mxIsChar(prhs[1])) 
+    {
+        mexErrMsgIdAndTxt("matpy:WrongInputVariableType", "Usage: py('eval', stmt)");
+    }
 
 	char *stmt = mxArrayToString(prhs[1]);
 
@@ -391,7 +415,7 @@ static void do_eval() {
 	mxFree(stmt);
 	if (o == NULL) {
 		PyErr_Print();
-		mexErrMsgTxt("Error while evaluating Python statement");
+		mexErrMsgIdAndTxt("matpy:PythonError", "Error while evaluating Python statement");
 	}
 
 	if (nlhs > 0)
@@ -414,23 +438,29 @@ void mexFunction(int nlhs_, mxArray *plhs_[], int nrhs_, const mxArray *prhs_[])
 		PyObject *numpy = PyImport_ImportModule("numpy");
 		if (numpy == NULL) {
 			PyErr_Print();
-			mexErrMsgTxt("numpy not accessible");
+			mexErrMsgIdAndTxt("matpy:NumpyNotAccessible", "numpy not accessible");
 		}
 		PyObject *numpy_dict = PyModule_GetDict(numpy);
 		if (debug) mexPrintf("numpy_dict = 0x%08X\n", numpy_dict);
 		np_array_fun = PyDict_GetItemString(numpy_dict, "array");
 		if (np_array_fun == 0) {
 			PyErr_Print();
-			mexErrMsgTxt("numpy.array not accessible");
+			mexErrMsgIdAndTxt("matpy:NumpyArrayNotAccessible", "numpy.array not accessible");
 		}
 		if (debug) mexPrintf("np_array_fun = 0x%08X\n", np_array_fun);
 		ndarray_cls = PyDict_GetItemString(numpy_dict, "ndarray");
 		been_here = true;
 	}
 
-	if (nrhs == 0 || !mxIsChar(prhs[0])) {
-		mexErrMsgTxt("Usage: py(cmd, varargin)");
-	}
+    if(nrhs == 0) 
+    {
+        mexErrMsgIdAndTxt("matpy:WrongNumberOfInputs", "Usage: py(cmd, varargin)");
+    }
+
+    if(!mxIsChar(prhs[0])) 
+    {
+        mexErrMsgIdAndTxt("matpy:WrongInputVariableType", "Usage: py(cmd, varargin)");
+    }
 
 	char *cmd = mxArrayToString(prhs[0]);
 	if (!strcmp(cmd, "eval")) {
@@ -450,7 +480,7 @@ void mexFunction(int nlhs_, mxArray *plhs_[], int nrhs_, const mxArray *prhs_[])
 	} else if (!strcmp(cmd, "debugoff")) {
 		debug = false;
 	} else {
-		mexErrMsgTxt("Unrecognized cmd");
+		mexErrMsgIdAndTxt("matpy:UnrecognizedCommand", "Unrecognized cmd");
 	}
 	mxFree(cmd);
 }
