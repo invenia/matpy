@@ -276,6 +276,78 @@ function TestLogicalExportImport
 
 end
 
+%% Test basic struct Export and Import
+function TestStructExportImport1
+
+    dataType = 'struct';
+    expected = struct('field1', 'val1', 'feild2', 'val2');
+    tmp = expected;
+
+    py_export tmp;
+    tmp = '';
+    py_import tmp;
+
+    actual = tmp;
+
+    assertEqual(expected, actual, [dataType, ' export and/or import not successful']);
+end
+
+%% Test struct Export and Import with multiple elements
+function TestStructExportImport2
+
+    dataType = 'struct';
+    expected = struct('field1', 'val1', 'feild2', 'val2');
+    expected(2) = struct('field1', 'val3', 'feild2', 'val4');
+    tmp = expected;
+
+    py_export tmp;
+    tmp = '';
+    py_import tmp;
+
+    actual = tmp;
+
+    assertEqual(expected, actual, [dataType, ' export and/or import not successful']);
+end
+
+%% Test struct Export with a field with a null value, should return an error
+function TestStructExport
+
+    function TestFunc
+        expected = struct('field1', 'val1', 'feild2', 'val2');
+        expected(2).field1 = 'val3';
+
+        py_export expected;
+    end
+
+    assertExceptionThrown(@() TestFunc, 'matpy:NullFieldValue');
+end
+
+%% Test struct Import of dictionary with incorrect form
+function TestStructImport
+
+    function TestFunc
+        stmt = 'expected = {"f1": "v1", "f2": "v2"}';
+        py('eval', stmt);
+        py_import expected;
+
+    end
+
+    assertExceptionThrown(@() TestFunc, 'matpy:IncorrectStructForm');
+end
+
+%% Test struct Import of dictionary with inconsistent list lengths
+function TestStructImport2
+
+    function TestFunc
+        stmt = 'expected = {"f1": ["v1", "v2"], "f2": ["v3"]}';
+        py('eval', stmt);
+        py_import expected;
+
+    end
+
+    assertExceptionThrown(@() TestFunc, 'matpy:IncorrectStructForm');
+end
+
 % make a random number, to help with tests
 function randomNum = randomNumber(numberType)
     randomNum = randi(1,1,numberType);
