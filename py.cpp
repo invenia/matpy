@@ -92,10 +92,10 @@ static PyObject* mat2py(const mxArray *a) {
 			for(j = 0; j < nelem; j++) {
 				item = mxGetFieldByNumber(a, j, i);
                 if(item == NULL)
-                    mexErrMsgTxt("Null field in struct");
+                   mexErrMsgIdAndTxt("matpy:NullFieldValue", "Null field in struct");
 				pyItem = mat2py(item);
                 if(pyItem == NULL)
-                    mexErrMsgTxt("Unsupported data type struct");
+                    mexErrMsgIdAndTxt("matpy:UnsupportedVariableType", "Unsupported variable type in struct");
     			
                 PyList_SetItem(list, j, pyItem);
             }
@@ -356,17 +356,25 @@ static mxArray* py2mat(PyObject *o) {
 		PyObject *keys = PyDict_Keys(o);
 		PyObject *items = PyDict_Values(o);
 		mwSize nfields = PyDict_Size(o);
-		mwSize nelem = PyList_Size(PyList_GetItem(items, 0));
+		mwSize nelem;
 		char *fieldNames[nfields];
 		int i, j;
 
 		if (debug) mexPrintf("nfields = %d, nelem = %d\n", nfields, nelem);
 
 		// check each field to make sure there is a value for every element in each
-		for(i = 1; i < nfields; i++) {
+		for(i = 0; i < nfields; i++) {
+            if(!PyList_Check(PyList_GetItem(items, 0))) {
+                Py_DECREF(o);
+                mexErrMsgIdAndTxt("matpy:IncorrectStructForm" ,"Dictionary must have a list of values for each field");
+            }
+
+            if(i == 0)
+                nelem = PyList_Size(PyList_GetItem(items, 0));
+
 			if(nelem != PyList_Size(PyList_GetItem(items, i))) {
 				Py_DECREF(o);
-				mexErrMsgTxt("Incorrect form for struct: Inconsistent number of elements");
+				mexErrMsgIdAndTxt("matpy:IncorrectStructForm" ,"Inconsistent number of elements");
 			}
 		}
 

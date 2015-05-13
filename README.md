@@ -56,6 +56,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 - single
 - double
 - logical
+- Matlab structs
+    - structs are exported as python dictionary such that each field is a key in the dictionary and has a corresponding list of values, one for each of the elements of the struct.
+    - only dictionaries in this form can be imported as structs.
+    - ex. s =
+            1x2 struct array with fields:
+                f1
+                f2
+          s(1) =
+                f1: 'v1'
+                f2: 'v2'
+          s(2) =
+                f1: 'v3'
+                f2: 'v4'
+
+          would be exported as:
+          {'f1': ['v1', 'v3'], 'f2': ['v2', 'v3']}
+
+
 
 ## Types NOT supported to Import and Export
 
