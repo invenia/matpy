@@ -59,8 +59,8 @@ static void initaview(void)
 {
     PyObject *m = Py_InitModule("aview", a_methods);
     if (m == NULL) return;
-    PySys_SetObject("stdout", m);
-    PySys_SetObject("stderr", m);
+    PySys_SetObject((char*)"stdout", m);
+    PySys_SetObject((char*)"stderr", m);
 }
 
 static PyObject* mat2py(const mxArray *a) {
@@ -163,6 +163,8 @@ break
 			CASE(mxINT64_CLASS, long long, "int64", PyLong_FromLongLong);
 			// uint64 can cause matlab to crash
 			// CASE(mxUINT64_CLASS, unsigned long long, "uint64", PyLong_FromUnsignedLongLong);
+			default:
+				mexErrMsgIdAndTxt("matpy:UnsupportedVariableType", "Unsupported variable type");
 			}
 		} else {
 #undef CASE
@@ -185,6 +187,8 @@ break
 			CASE(mxINT64_CLASS, long long, "complex128");
 			// uint64 can cause matlab to crash
 			// CASE(mxUINT64_CLASS, unsigned long long, "complex128");
+			default:
+				mexErrMsgIdAndTxt("matpy:UnsupportedVariableType", "Unsupported variable type");
 			}
 		}
 	}
@@ -305,7 +309,7 @@ static mxArray* py2mat(PyObject *o) {
 		Py_DECREF(reshape_meth);
 		// PyObject *reshaped = PyObject_CallMethod(o, "reshape", "O", lin_shape);
 		Py_DECREF(o);
-		PyObject *list = PyObject_CallMethod(reshaped, "tolist", NULL);
+		PyObject *list = PyObject_CallMethod(reshaped, (char *)"tolist", NULL);
 		Py_DECREF(reshaped);
 
 		mxArray *a = NULL;
@@ -434,6 +438,7 @@ static mxArray* py2mat(PyObject *o) {
 		Py_DECREF(o);
 		mexErrMsgIdAndTxt("matpy:UnsupportedVariableType", "Unsupported variable type");
 	}
+	return NULL;
 }
 
 static void do_get() 
@@ -534,6 +539,9 @@ static void do_eval()
 	if (nlhs > 0)
 	{
 		plhs[0] = py2mat(o);
+		if (plhs[0] == NULL) {
+			mexErrMsgIdAndTxt("matpy:ConversionError", "Error converting to MATLAB variable");
+		}
 	}
 }
 
