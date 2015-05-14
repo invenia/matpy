@@ -28,8 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #include <string.h>
 // #include <dlfcn.h>
 
-const char *pyObjectToString(PyObject *pyObject);
-void addVariableToPython(const char* name, PyObject *value);
+static const char *pyObjectToString(PyObject *pyObject);
+static void addVariableToPython(const char* name, PyObject *value);
 
 static PyObject *globals;
 static PyObject *module;
@@ -78,6 +78,7 @@ static PyObject* mat2py(const mxArray *a) {
 		PyObject *o = PyString_FromString(str);
 		mxFree(str);
 		return o;
+		// All py objects cleaned up.
 	} else if (mxIsStruct(a)) {
 		PyObject *o = PyDict_New();
 		PyObject *list;
@@ -216,14 +217,11 @@ break
 		Py_DECREF(kwargs);
 		Py_DECREF(reshape_meth);
 		Py_DECREF(ndary);
-		Py_DECREF(shape);
 	}
 	else 
 	{
 		mexErrMsgIdAndTxt("matpy:UnsupportedVariableType", "Unsupported variable type");
 	}
-	
-	Py_DECREF(list);
 
 	return ret;
 }
@@ -254,8 +252,11 @@ static mxArray* py2mat(PyObject *o) {
 		Py_DECREF(o);
 		return a;
 	} else if (PyUnicode_Check(o)) {
-		PyObject *tmp = PyUnicode_AsASCIIString(o);
-		char* tmpString = PyString_AsString(PyObject_Str(tmp));
+		PyObject *tmpASCII = PyUnicode_AsASCIIString(o);
+		PyObject *tmpObject = PyObject_Str(tmpASCII);
+		Py_DECREF(tmpASCII);
+		char* tmpString = PyString_AsString(tmpObject);
+		Py_DECREF(tmpObject);
 		mxArray *a = mxCreateString(tmpString);
 		Py_DECREF(o);
 		return a;
@@ -489,7 +490,7 @@ static void do_set()
 	{
 		mexErrMsgIdAndTxt("matpy:ExportError", "Error while export to Python");
 	}
-	//Py_DECREF(var);
+
 	mxFree(var_name);
 }
 
@@ -512,13 +513,16 @@ static void do_eval()
 	PyObject *o = PyRun_String(stmt, Py_file_input, globals, globals);
 	// Py_DECREF(locals);
 	mxFree(stmt);
-	if (o == NULL) {
+	if (o == NULL) 
+	{
 		PyErr_Print();
 		mexErrMsgIdAndTxt("matpy:PythonError", "Error while evaluating Python statement");
 	}
 
 	if (nlhs > 0)
+	{
 		plhs[0] = py2mat(o);
+	}
 }
 
 void mexFunction(int nlhs_, mxArray *plhs_[], int nrhs_, const mxArray *prhs_[]) {
@@ -590,7 +594,8 @@ void mexFunction(int nlhs_, mxArray *plhs_[], int nrhs_, const mxArray *prhs_[])
 	mxFree(cmd);
 }
 
-void addVariableToPython(const char* name, PyObject *value)
+// Note: This function steals the reference to value.
+static void addVariableToPython(const char* name, PyObject *value)
 {
 	int success = PyModule_AddObject(module, name, value);
 
@@ -603,10 +608,13 @@ void addVariableToPython(const char* name, PyObject *value)
 	}
 }
 
-const char *pyObjectToString(PyObject *pyObject)
+static const char *pyObjectToString(PyObject *pyObject)
 {
 	PyObject* temp = PyObject_Repr(pyObject);
 	const char *result = PyString_AsString(temp);
 	Py_DECREF(temp);
 	return result;
 }
+
+
+
