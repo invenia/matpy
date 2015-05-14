@@ -319,7 +319,7 @@ static mxArray* py2mat(PyObject *o) {
 		a = mxCreateNumericArray(ndims, dims, cls, mxREAL); \
 		c_type *data = (c_type*) mxGetData(a); \
 		for (size_t i = 0; i < nelem; i++) { \
-			PyObject *item = PyList_GetItem(list, i); \
+			PyObject *item = PySequence_GetItem(list, i); \
 			*data++ = (c_type) ctor(item); \
 			Py_DECREF(item); \
 		} \
@@ -344,7 +344,7 @@ static mxArray* py2mat(PyObject *o) {
 		c_type *data = (c_type*) mxGetData(a); \
 		c_type *imagData = (c_type*) mxGetImagData(a); \
 		for (int i = 0; i < nelem; i++) { \
-			PyObject *item = PyList_GetItem(list, i); \
+			PyObject *item = PySequence_GetItem(list, i); \
 			*data++ = (c_type) PyComplex_RealAsDouble(item); \
 			*imagData++ = (c_type) PyComplex_ImagAsDouble(item); \
 			Py_DECREF(item); \
