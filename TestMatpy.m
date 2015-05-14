@@ -509,6 +509,24 @@ function TestGetPythonCompilationError
 
 end
 
+%% Test for py import, import something that doesn't exist
+function TestPyImportVariableThatDoesNotExist
 
+    function TestFunc
+        py_import this_does_not_exists
+    end
 
+    assertExceptionThrown(@() TestFunc, 'matpy:PythonError');
 
+end
+
+%% Test for py export, export something that doesn't exist
+function TestPyExportVariableThatDoesNotExist
+
+    function TestFunc
+        py_export this_also_does_not_exists
+    end
+
+    assertExceptionThrown(@() TestFunc, 'MATLAB:err_static_workspace_violation');
+
+end
