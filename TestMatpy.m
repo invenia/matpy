@@ -276,6 +276,23 @@ function TestLogicalExportImport
 
 end
 
+%% Test cell Export and import
+function TestCellExportImport
+
+    dataType  = 'cell';
+    expected = {['a', 'b', 'c'], magic(4), 100, 'hi'};
+    tmp = expected;
+
+    py_export tmp;
+    tmp = '';
+    py_import tmp;
+
+    actual = tmp;
+
+    assertEqual(expected, actual, [dataType, ' export and/or import not successful']);
+
+end
+
 %% Test basic struct Export and Import
 function TestStructExportImport1
 
