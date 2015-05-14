@@ -106,6 +106,9 @@ static PyObject* mat2py(const mxArray *a) {
 
             PyDict_SetItemString(o, fieldName, list);
 		}
+
+		Py_DECREF(list);
+
 		return o;
 	}
 
@@ -351,6 +354,11 @@ static mxArray* py2mat(PyObject *o) {
 		for (int i = 0; i < nelem; i++) {
 			PyObject *item = PySequence_GetItem(o, i);
 			mxArray *mat_item = py2mat(item);
+			if(mat_item == NULL)
+			{
+				Py_DECREF(o);
+				mexErrMsgIdAndTxt("matpy:ConversionError", "Error converting to MATLAB variable");
+			}
 			if (debug) mexPrintf("mat_item = 0x%08X\n", mat_item);
 			mxSetCell(a, i, mat_item);
 		}
@@ -364,12 +372,11 @@ static mxArray* py2mat(PyObject *o) {
 		char *fieldNames[nfields];
 		int i, j;
 
-		if (debug) mexPrintf("nfields = %d, nelem = %d\n", nfields, nelem);
-
-		// check each field to make sure there is a value for every element in each
 		for(i = 0; i < nfields; i++) {
             if(!PyList_Check(PyList_GetItem(items, 0))) {
                 Py_DECREF(o);
+                Py_DECREF(keys);
+                Py_DECREF(items);
                 mexErrMsgIdAndTxt("matpy:IncorrectStructForm" ,"Dictionary must have a list of values for each field");
             }
 
@@ -378,9 +385,13 @@ static mxArray* py2mat(PyObject *o) {
 
 			if(nelem != PyList_Size(PyList_GetItem(items, i))) {
 				Py_DECREF(o);
+				Py_DECREF(keys);
+				Py_DECREF(items);
 				mexErrMsgIdAndTxt("matpy:IncorrectStructForm" ,"Inconsistent number of elements");
 			}
 		}
+
+		if (debug) mexPrintf("nfields = %d, nelem = %d\n", nfields, nelem);
 
 		for(i = 0; i < nfields; i++) {
 			PyObject *field = PyList_GetItem(keys, i);
@@ -391,9 +402,15 @@ static mxArray* py2mat(PyObject *o) {
 		mxArray *a = mxCreateStructArray(2, dims, nfields, (const char**)fieldNames);
 
 		for(i = 0; i < nfields; i++) {
-			PyObject *item = PyList_GetItem(items, i);
+			PyObject *item = PySequence_GetItem(items, i);
 			for(j = 0; j < nelem; j++) {
-				mxArray *mat_item = py2mat(PyList_GetItem(item, j));
+				mxArray *mat_item = py2mat(PySequence_GetItem(item, j));
+				if(mat_item == NULL)
+				{
+					Py_DECREF(o);
+					mexErrMsgIdAndTxt("matpy:ConversionError", "Error converting to MATLAB variable");
+				}
+				if (debug) mexPrintf("mat_item = 0x%08X\n", mat_item);
 				mxSetFieldByNumber(a, j, i, mat_item);
 			}
 		}
