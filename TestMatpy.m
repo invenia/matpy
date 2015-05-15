@@ -157,7 +157,6 @@ function TestUInt32ExportImport
 
 end
 
-
 %% Test Int64 Export and Import
 function TestInt64ExportImport
 
@@ -175,35 +174,21 @@ function TestInt64ExportImport
 
 end
 
-% Cannot Import or Export uint64 since uint64 causes matlab to crash
 
-%% Test UInt64 Export, it should fail
-function TestUInt64Export
+%% Test UInt64 Export and Import
+function TestUInt64ExportImport
 
-    function TestFunc
-        numberType = 'uint64';
-        expected = uint64(intmax(numberType));
-        tmp = expected;
+    numberType = 'uint64';
+    expected = uint64(intmax(numberType)); % randi does not support 'uint64'
+    tmp = expected;
 
-        py_export tmp;
-    end
+    py_export tmp;
+    tmp = '';
+    py_import tmp;
 
-    assertExceptionThrown(@() TestFunc, 'matpy:UnsupportedVariableType');
+    actual = tmp;
 
-end
-
-%% Test UInt64 in a cell Export, it should fail
-function TestUInt64CellExport
-
-    function TestFunc
-        numberType = 'uint64';
-        expected = {[uint64(intmax(numberType))]};
-        tmp = expected;
-
-        py_export tmp;
-    end
-
-    assertExceptionThrown(@() TestFunc, 'matpy:UnsupportedVariableType');
+    assertEqual(expected, actual, [numberType, ' export and/or import not successful']);
 
 end
 

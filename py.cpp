@@ -161,8 +161,7 @@ break
 			CASE(mxINT32_CLASS, int, "int32", PyInt_FromLong);
 			CASE(mxUINT32_CLASS, unsigned int, "uint32", PyLong_FromLongLong);
 			CASE(mxINT64_CLASS, long long, "int64", PyLong_FromLongLong);
-			// uint64 can cause matlab to crash
-			// CASE(mxUINT64_CLASS, unsigned long long, "uint64", PyLong_FromUnsignedLongLong);
+			CASE(mxUINT64_CLASS, unsigned long long, "uint64", PyLong_FromUnsignedLongLong);
 			default:
 				mexErrMsgIdAndTxt("matpy:UnsupportedVariableType", "Unsupported variable type");
 			}
@@ -185,8 +184,7 @@ break
 			CASE(mxINT32_CLASS, int, "complex128");
 			CASE(mxUINT32_CLASS, unsigned int, "complex128");
 			CASE(mxINT64_CLASS, long long, "complex128");
-			// uint64 can cause matlab to crash
-			// CASE(mxUINT64_CLASS, unsigned long long, "complex128");
+			CASE(mxUINT64_CLASS, unsigned long long, "complex128");
 			default:
 				mexErrMsgIdAndTxt("matpy:UnsupportedVariableType", "Unsupported variable type");
 			}
@@ -334,8 +332,7 @@ static mxArray* py2mat(PyObject *o) {
 		CASE("int32", int, mxINT32_CLASS, PyInt_AsLong) else
 		CASE("uint32", unsigned int, mxUINT32_CLASS, PyInt_AsUnsignedLongMask) else
 		CASE("int64", long long, mxINT64_CLASS, PyLong_AsLongLong) else
-		// uint64 can cause matlab to crash
-		// CASE("uint64", double, mxUINT64_CLASS, PyLong_AsUnsignedLongLong) else
+		CASE("uint64", unsigned long long, mxUINT64_CLASS, PyLong_AsUnsignedLongLong) else
 
 #undef CASE
 #define CASE(str,c_type,cls) \
