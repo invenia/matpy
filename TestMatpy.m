@@ -1,4 +1,4 @@
-function suite = TestQuery
+function suite = TestMatpy
 	initTestSuite;
 end
 
@@ -189,24 +189,6 @@ function TestUInt64ExportImport
     actual = tmp;
 
     assertEqual(expected, actual, [numberType, ' export and/or import not successful']);
-
-end
-
-%% Test UInt64 Import, it should fail
-function TestUInt64Import
-
-    function TestFunc
-        numberType = 'uint64';
-        stmt = sprintf([
-                'import numpy\n' ...
-                'tmp = numpy.', numberType, '(1)\n'
-            ]);
-        py('eval', stmt);
-
-        py_import tmp;
-    end
-
-    assertExceptionThrown(@() TestFunc, 'matpy:UnsupportedVariableType');
 
 end
 
