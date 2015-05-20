@@ -61,9 +61,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     - structs are exported as python dictionary such that each field is a key in the dictionary and has a corresponding list of values, one for each of the elements of the struct.
     - only dictionaries in this form can be imported as structs.
     - ex. s =
-            1x2 struct array with fields:
-                f1
-                f2
+
+          1x2 struct array with fields:
+				f1
+				f2
+
           s(1) =
                 f1: 'v1'
                 f2: 'v2'
@@ -72,6 +74,105 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 f2: 'v4'
 
           would be exported as:
-          {'f1': ['v1', 'v3'], 'f2': ['v2', 'v3']}
+          {'f1': ['v1', 'v3'], 'f2': ['v2', 'v4']}
+
+
 - Matlab cells
   - cells are exported as a list of objects
+
+## Some simple examples
+
+Running a python command with matpy must have the following format:
+
+> py('eval', '**python command here**')
+
+An example
+
+```
+>> py('eval', 'print "hello, world"')
+hello, world
+```
+
+This is a simple example of exporting a variable to python, changing it, and importing the new value.
+
+```
+>> test = 3
+
+test =
+
+     3
+
+>> py_export test
+>> py('eval', 'test = test + 3')
+>> py_import test
+>> test
+
+test =
+
+     6
+
+```
+
+The example below shows that exporting a simple value to python is represted in python as a single value in a 2d array
+
+```
+>> test = 4
+
+test =
+
+     4
+
+>> py_export test
+>> py('eval', 'print test')
+[[ 4.]]
+>> py('eval', 'print test[0][0]')
+4.0
+```
+
+Here's the example of using the py shell
+
+```
+>> test = 5
+
+test =
+
+     5
+
+>> py_export test
+>> py_shell
+py> print "hello, world"
+hello, world
+py> print test
+[[ 5.]]
+py> 1 + 1
+py> print 1 + 1
+2
+py> if test[0][0] < 10: print "hi, again"
+hi, again
+py> exit
+```
+
+Here's an example of exporting a struct to python, note how it is represented in python
+
+```
+>> test2 = struct('field1', 'value1', 'field2', 'value2');
+>> test2(2) = struct('field1', 'value3', 'field2', 'value4');
+>> test2(1)
+
+ans =
+
+    field1: 'value1'
+    field2: 'value2'
+
+>> test2(2)
+
+ans =
+
+    field1: 'value3'
+    field2: 'value4'
+
+>> py_export test2
+>> py_shell
+py> print test2
+{'field2': ['value2', 'value4'], 'field1': ['value1', 'value3']}
+```
