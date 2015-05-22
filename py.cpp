@@ -28,8 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #include <string.h>
 // #include <dlfcn.h>
 
+#define PYPATH "/.pyenv/versions/2.7.9/bin/python"
+
 static const char *pyObjectToString(PyObject *pyObject);
 static void addVariableToPython(const char* name, PyObject *value);
+static void setRightPythonPath();
 
 static PyObject *globals;
 static PyObject *module;
@@ -552,6 +555,7 @@ void mexFunction(int nlhs_, mxArray *plhs_[], int nrhs_, const mxArray *prhs_[])
 	if (!been_here) {
 		if (debug) mexPrintf("Initializing...\n");
 		// dlopen("libpython2.6.so", RTLD_LAZY |RTLD_GLOBAL);
+		setRightPythonPath();
 		Py_Initialize();
 		initaview();
         module = PyImport_AddModule("__main__");
@@ -634,5 +638,20 @@ static const char *pyObjectToString(PyObject *pyObject)
 	return result;
 }
 
+static void setRightPythonPath()
+{
+	const int MAX_SIZE = 100;
+	const char *HOME = "HOME";
+	char *homePath;
+
+	homePath = getenv(HOME);
+
+	char fullPath[MAX_SIZE]; 
+
+	strncpy(fullPath, homePath, MAX_SIZE/2); 
+	strncat(fullPath, PYPATH, MAX_SIZE/2); 
+
+	Py_SetProgramName(fullPath);
+}
 
 
