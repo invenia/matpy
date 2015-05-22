@@ -28,10 +28,10 @@ MEXEXT:=$(shell $(join $(MATDIR),mexext))
 all: buildmex
 
 buildmex:
-	$(MEX) py.cpp -Dchar16_t=uint16_T -l$(PYNAME) -I$(PYINCLUDEDIR) -L$(PYLIBPATH)
+	$(MEX) py.cpp -Dchar16_t=uint16_T -l$(PYNAME) -I$(PYINCLUDEDIR) -L$(PYLIBPATH) '-DPYPATH=\"$(PYPATH)\"'
 
 debugmex:
-	$(MEX) -g py.cpp -Dchar16_t=uint16_T -l$(PYNAME) -I$(PYINCLUDEDIR) -L$(PYLIBPATH)
+	$(MEX) -g py.cpp -Dchar16_t=uint16_T -l$(PYNAME) -I$(PYINCLUDEDIR) -L$(PYLIBPATH) '-DPYPATH=\"$(PYPATH)\"'
 
 clean:
 	rm -f py.$(MEXEXT)
