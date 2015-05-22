@@ -552,6 +552,7 @@ void mexFunction(int nlhs_, mxArray *plhs_[], int nrhs_, const mxArray *prhs_[])
 	if (!been_here) {
 		if (debug) mexPrintf("Initializing...\n");
 		// dlopen("libpython2.6.so", RTLD_LAZY |RTLD_GLOBAL);
+		Py_SetProgramName((char*)PYPATH);
 		Py_Initialize();
 		initaview();
         module = PyImport_AddModule("__main__");
@@ -633,6 +634,5 @@ static const char *pyObjectToString(PyObject *pyObject)
 	const char *result = PyString_AsString(temp);
 	return result;
 }
-
 
 

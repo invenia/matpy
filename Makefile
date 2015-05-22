@@ -17,6 +17,10 @@ $(info Python dir: $(PYDIR))
 PYNAME:=$(notdir $(realpath $(PYPATH)))
 PYINCLUDEDIR:=$(PYDIR)../include/$(PYNAME)
 
+ifndef PYLIBPATH
+	PYLIBPATH:=$(PYDIR)../lib/$(PYNAME)
+endif
+
 MATLAB:=$(join $(MATDIR),matlab)
 MEX:=$(join $(MATDIR),mex)
 MEXEXT:=$(shell $(join $(MATDIR),mexext))
@@ -24,10 +28,10 @@ MEXEXT:=$(shell $(join $(MATDIR),mexext))
 all: buildmex
 
 buildmex:
-	$(MEX) py.cpp -Dchar16_t=uint16_T -l$(PYNAME) -I$(PYINCLUDEDIR)
+	$(MEX) py.cpp -Dchar16_t=uint16_T -l$(PYNAME) -I$(PYINCLUDEDIR) -L$(PYLIBPATH) '-DPYPATH=\"$(PYPATH)\"'
 
 debugmex:
-	$(MEX) -g py.cpp -Dchar16_t=uint16_T -l$(PYNAME) -I$(PYINCLUDEDIR)
+	$(MEX) -g py.cpp -Dchar16_t=uint16_T -l$(PYNAME) -I$(PYINCLUDEDIR) -L$(PYLIBPATH) '-DPYPATH=\"$(PYPATH)\"'
 
 clean:
 	rm -f py.$(MEXEXT)
