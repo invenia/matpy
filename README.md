@@ -176,3 +176,35 @@ ans =
 py> print test2
 {'field2': ['value2', 'value4'], 'field1': ['value1', 'value3']}
 ```
+
+## Troubleshooting
+
+### Compilation Problems
+
+##### Can't find MATLAB
+If you are getting errors similar to 
+
+```
+make: mexext: Command not found
+make: mex: Command not found
+```
+It is possible that the Makefile cannot locate your MATLAB. To Fix, try adding something like this to your ~/.bash_profile `export MATPATH=[path to matlab]` for example `export MATPATH=/Applications/MATLAB_R2012b.app/bin/matlab` worked for me.
+
+##### Can't find Python
+If you are getting errors similar to
+
+```
+py.cpp:27:10: fatal error: 'Python.h' file not found
+#include <Python.h>
+          ^
+```
+It is possible that your `which python` doesn't point to a specific python that we want. You may have to set in your ~/.bash_profile `export PYPATH=[path to .pyenv]/versions/2.7.9/bin/python` for example `export PYPATH=~/.pyenv/versions/2.7.9/bin/python` worked for me.
+
+##### Warnings
+If your last line after compiling is,
+
+```
+
+7 warnings generated.
+```
+then everything is working as should.
