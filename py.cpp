@@ -30,6 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 static const char *pyObjectToString(PyObject *pyObject);
 static void addVariableToPython(const char* name, PyObject *value);
+static PyObject *matpy_write(PyObject *self, PyObject *args);
+static PyObject* matpy_flush(PyObject* self, PyObject* args);
+static void initMatpyPrint(void);
 
 static PyObject *globals;
 static PyObject *module;
@@ -40,27 +43,35 @@ static PyObject *np_array_fun;
 static PyObject *ndarray_cls;
 static bool debug = false;
 
-static PyObject *
-aview_write(PyObject *self, PyObject *args)
+static PyMethodDef matpyPrintMethods[] =
 {
-    const char *what;
-    if (!PyArg_ParseTuple(args, "s", &what))
-        return NULL;
-    printf("%s", what);
-    return Py_BuildValue("");
-}
-
-static PyMethodDef a_methods[] = {
-    {"write", aview_write, METH_VARARGS, "Write something."},
+    {"write", matpy_write, METH_VARARGS, "write is used to output to the MATLAB console"},
+    {"flush", matpy_flush, METH_VARARGS, "flush is not needed and does nothing"},
     {NULL, NULL, 0, NULL}
 };
 
-static void initaview(void)
+static PyObject *matpy_write(PyObject *self, PyObject *args)
 {
-    PyObject *m = Py_InitModule("aview", a_methods);
-    if (m == NULL) return;
-    PySys_SetObject((char*)"stdout", m);
-    PySys_SetObject((char*)"stderr", m);
+    const char *output;
+    if (!PyArg_ParseTuple(args, "s", &output))
+        return NULL;
+    printf("%s", output);
+    return Py_BuildValue("");
+}
+
+static PyObject* matpy_flush(PyObject* self, PyObject* args)
+{
+    return Py_BuildValue("");
+}
+
+static void initMatpyPrint(void)
+{
+    PyObject *matpyPrintModule = Py_InitModule("print", matpyPrintMethods);
+    if (NULL != matpyPrintModule)
+    {
+        PySys_SetObject((char*)"stdout", matpyPrintModule);
+        PySys_SetObject((char*)"stderr", matpyPrintModule);
+    }
 }
 
 static PyObject* mat2py(const mxArray *a) {
@@ -554,7 +565,7 @@ void mexFunction(int nlhs_, mxArray *plhs_[], int nrhs_, const mxArray *prhs_[])
 		// dlopen("libpython2.6.so", RTLD_LAZY |RTLD_GLOBAL);
 		Py_SetProgramName((char*)PYPATH);
 		Py_Initialize();
-		initaview();
+		initMatpyPrint();
         module = PyImport_AddModule("__main__");
         if (NULL == module) 
         {
