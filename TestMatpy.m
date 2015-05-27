@@ -57,7 +57,7 @@ end
 function TestInt8ExportImport
 
     numberType = 'int8';
-    expected = int8(randomNumber(numberType));
+    expected = int8(intmax(numberType));
     tmp = expected;
 
     py_export tmp;
@@ -74,7 +74,7 @@ end
 function TestUInt8ExportImport
 
     numberType = 'uint8';
-    expected = uint8(randomNumber(numberType));
+    expected = uint8(intmax(numberType));
     tmp = expected;
 
     py_export tmp;
@@ -92,7 +92,7 @@ end
 function TestInt16ExportImport
 
     numberType = 'int16';
-    expected = int16(randomNumber(numberType));
+    expected = int16(intmax(numberType));
     tmp = expected;
 
     py_export tmp;
@@ -109,7 +109,7 @@ end
 function TestUInt16ExportImport
 
     numberType = 'uint16';
-    expected = uint16(randomNumber(numberType));
+    expected = uint16(intmax(numberType));
     tmp = expected;
 
     py_export tmp;
@@ -127,7 +127,7 @@ end
 function TestInt32ExportImport
 
     numberType = 'int32';
-    expected = int32(randomNumber(numberType));
+    expected = int32(intmax(numberType));
     tmp = expected;
 
     py_export tmp;
@@ -144,7 +144,7 @@ end
 function TestUInt32ExportImport
 
     numberType = 'uint32';
-    expected = uint32(randomNumber(numberType));
+    expected = uint32(intmax(numberType));
     tmp = expected;
 
     py_export tmp;
@@ -196,7 +196,7 @@ end
 function TestSingleExportImport
 
     numberType = 'single';
-    expected = single(randomNumber(numberType));
+    expected = single(realmax(numberType));
     tmp = expected;
 
     py_export tmp;
@@ -213,7 +213,7 @@ end
 function TestDoubleExportImport
 
     numberType = 'double';
-    expected = double(randomNumber(numberType));
+    expected = double(realmax(numberType));
     tmp = expected;
 
     py_export tmp;
@@ -330,11 +330,6 @@ function TestStructImport2
     end
 
     assertExceptionThrown(@() TestFunc, 'matpy:IncorrectStructForm');
-end
-
-% make a random number, to help with tests
-function randomNum = randomNumber(numberType)
-    randomNum = randi(1,1,numberType);
 end
 
 %% Test Error Messages %%
