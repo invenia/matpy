@@ -208,3 +208,7 @@ If your last line after compiling is,
 7 warnings generated.
 ```
 then everything is working as should.
+
+### Pointing to the right python
+
+By default, matpy will build with the systems default python. If you want it to reference a specific python, you'll need to make a file `~/.matpyrc` and set the python you want matlab to use (and only that string), for example I have `/.pyenv/versions/2.7.9/bin/python` as the only line in my `~/.matpyrc` file.

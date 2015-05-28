@@ -20,36 +20,37 @@
 %	var = py('get' 'name_of_var')
 
 function varargout = py(varargin)
+	
 	lastWorkingDir = pwd;
 	cd(mfiledir);
 
 	home = getenv('HOME');
-	SPACE = ' '
+	partialPath = getParsedPypath();
+	parent ='/..';
 
-	CHAR16_t = '-Dchar16_t=uint16_T';
-
-	PYNAME = '-lpython2.7';
+	CHAR16_T = '-Dchar16_t=uint16_T';
 
 	pre = '-I';
-	partialPath = '/.pyenv/versions/2.7.9/include/python2.7';
-	PYINCLUDEDIR = strcat(pre, home, partialPath);
+	includePath = '/include/python2.7';
+	PYINCLUDEDIR = strcat(pre, home, partialPath, parent, includePath)
 
 	pre = '-L';
-	partialPath = '/.pyenv/versions/2.7.9/lib/python2.7';
-	PYLIBPATH = strcat(pre, home, partialPath);
+	libraryPath = '/lib/python2.7';
+	PYLIBPATH = strcat(pre, home, partialPath, parent, libraryPath)
 
 	pre = '''-DPYPATH=\"';
+	pythonPath = '/python';
 	post = '\"''';
-	partialPath = '/.pyenv/versions/2.7.9/bin/python';
-	PYPATH = strcat(pre, home, partialPath, post);
+	PYPATH = strcat(pre, home, partialPath, pythonPath, post);
 
-	% I could not include PYNAME here without the compiler throwing a strange error.
-	MODIFIERS = [CHAR16_t, SPACE, PYPATH, SPACE, PYINCLUDEDIR, SPACE, PYLIBPATH];
+	SPACE = ' ';
+	CFLAG = 'CFLAGS="\$CFLAGS';
+	PYNAME = '-lpython2.7';
+	END_QUOTATION = '"';
+	PRE = [CFLAG, SPACE, PYNAME, SPACE, PYPATH, END_QUOTATION];
 
 	try
-		% I could not place PYPATH here without compining it with other strings 
-		% without the compiler ignoring it
-		mex('py.cpp', PYNAME, MODIFIERS);
+		mex('py.cpp', PRE, CHAR16_T, PYINCLUDEDIR, PYLIBPATH);
 	catch e
 		cd(lastWorkingDir);
 		rethrow(e);
@@ -58,4 +59,35 @@ function varargout = py(varargin)
 	cd(lastWorkingDir);
 	
 	[varargout{1:nargout}] = py(varargin{:});
+end
+
+function partialPath = getParsedPypath()
+	temp = getPypath();
+	tokens = splitBySlash(temp);
+	partialPath = cutOffEndsAndMerge(tokens);
+end
+
+function partialPath = getPypath()
+
+	SUCCESS = 0;
+	[success, partialPath] = system('cat ~/.matpyrc');
+
+	if success ~= SUCCESS
+		%Failed to find custom python, using systems
+
+		[success, partialPath] = system('which python');
+
+		if success ~= SUCCESS
+			error('Python could not be found');
+		end
+	end
+
+end
+
+function tokens = splitBySlash(str)
+	tokens = strread(str, '%s', 'delimiter', '/')
+end
+
+function partialPath = cutOffEndsAndMerge(tokens)
+	partialPath = sprintf('/%s' ,tokens{2:end-1})
 end
