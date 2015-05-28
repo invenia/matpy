@@ -1,11 +1,3 @@
-% Converts string to double precision value. The string may contain digits,
-% commas (thousands separator), a decimal point, a leading + or - sign,
-% an 'e' preceding a power of 10 scale factor, and an 'i' for a complex 
-% unit. 
-% 
-
-
-% 
 % A way to interact with python from matlab.
 % 
 % Inputs:
@@ -22,36 +14,10 @@
 % 	only for 'get' command, will return the value stored in python
 % 
 % Examples:
-% 	tmp = py('eval', 'print "hi"')
-% 
-
-
-%
-% If the string does not represent a valid scalar value a NaN is
-% returned instead.
-%
-% Inputs:
-%   Char or Cellstr, converts the strings into double precision values. If
-%     a cell is given a matrix will be returned of the same dimensions. NaN
-%     values will be returned for non-parsable strings.
-%
-% Outputs:
-%   Double Matrix, a scalar double if a char was given or a matrix of the s
-%     size of the given cellstr.
-%
-% Examples:
-%   str2double( '123.45e7' )
-%   str2double( '123 + 45i' )
-%   str2double( '3.14159' )
-%   str2double( '2.7i - 3.14' )
-%   str2double( { '2.71' '3.1415' } )
-%   str2double( '1,200.34' )
-%
-% See also: str2num, num2str, hex2num, char.
-
-% 25 August 2011
-% Curtis Vogt
-% Added comments and automatic compiling to help function.
+% 	py('eval', 'print "hello, world"')
+%	py('eval', 'print 2+2')
+%	py('set', 'name_of_var', var)
+%	var = py('get' 'name_of_var')
 
 function varargout = py(varargin)
 	lastWorkingDir = pwd;
