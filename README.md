@@ -42,6 +42,10 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
+## Python Version
+
+Currently, the only python version suppoted and testsed for is `python 2.7`.
+
 ## Types supported to Import and Export
 
 - String
@@ -211,4 +215,4 @@ then everything is working as should.
 
 ### Pointing to the right python
 
-By default, matpy will build with the systems default python. If you want it to reference a specific python, you'll need to make a file `~/.matpyrc` and set the python you want matlab to use (and only that string), for example I have `/.pyenv/versions/2.7.9/bin/python` as the only line in my `~/.matpyrc` file.
+By default, matpy will build with the systems default python. If you want it to reference a specific python, you'll need to make a file `~/.matpyrc` and set the python you want matlab to use (and only that string), for example I have `/Users/samuelmassinon/.pyenv/versions/2.7.9/bin/python` as the only line in my `~/.matpyrc` file.
