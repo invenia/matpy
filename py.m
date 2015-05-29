@@ -87,10 +87,9 @@ end
 function pyIncludePath = getPyIncludePath(execPrefix, pythonVersion)
 	pyIncludePath = [execPrefix, '/../include/python', pythonVersion];
 
-	FOLDER_FOUND = 7;
 	result = exist(pyIncludePath, 'dir');
 
-	if(result ~= FOLDER_FOUND)
+	if(~result)
 		% there's a chance that the python include path has an m on the end of it
 		pyIncludePath = [pyIncludePath, 'm'];
 	end
