@@ -25,17 +25,20 @@ function varargout = py(varargin)
 	lastWorkingDir = pwd;
 	cd(mfiledir);
 
-	[execPrefix pythonVersion] = getParsedPypath();
+	[execPrefix, pythonVersion] = getParsedPypath();
+
+	pythonVersionNoBuildNumber = pythonVersion(1:3);
 
 	PYINCLUDEDIR = ['-I', getPyIncludePath(execPrefix, pythonVersion)];
-	PYLIBPATH = ['-L', execPrefix, '/../lib/python', pythonVersion];
+	PYLIBPATH = ['-L', execPrefix, '/../versions/', pythonVersion, '/lib/python', pythonVersionNoBuildNumber];
 	PYPATH = ['''-DPYPATH=\"', execPrefix, '/python', '\"'''];
-	CFLAGS = ['CFLAGS="\$CFLAGS ', ' -lpython2.7 ', PYPATH, '"'];
+	CFLAGS = ['CFLAGS="\$CFLAGS ', ' -lpython', pythonVersionNoBuildNumber, ' ', PYPATH, '"'];
 
 	try
 		mex('py.cpp', CFLAGS, '-Dchar16_t=uint16_T', PYINCLUDEDIR, PYLIBPATH);
 	catch e
 		cd(lastWorkingDir);
+		sprintf('CFLAGS: %s\nPYINCLUDER: %s\nPYLIBPATH: %s\n', CFLAGS, PYINCLUDEDIR, PYLIBPATH)
 		rethrow(e);
 	end
 
@@ -76,7 +79,7 @@ end
 
 function pythonVersion = getPythonVersion(executable)
 	SUCCESS = 0;
-	[success pythonVersion] = system([executable, ' -c "import platform; print(platform.python_version()[:3])"']);
+	[success pythonVersion] = system([executable, ' -c "import platform; print(platform.python_version())"']);
 
 	if success ~= SUCCESS
 		error('Could not get version number of python');
@@ -85,7 +88,8 @@ function pythonVersion = getPythonVersion(executable)
 end
 
 function pyIncludePath = getPyIncludePath(execPrefix, pythonVersion)
-	pyIncludePath = [execPrefix, '/../include/python', pythonVersion];
+	pythonVersionNoBuildNumber = pythonVersion(1:3);
+	pyIncludePath = [execPrefix, '/../versions/', pythonVersion, '/include/python', pythonVersionNoBuildNumber];
 
 	result = exist(pyIncludePath, 'dir');
 
