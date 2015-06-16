@@ -46,38 +46,39 @@ function varargout = py(varargin)
 end
 
 function [pyExecutablePath, pyIncludePath, pyLibPath, pyVersion] = getPythonPaths()
-	
-	SUCCESS = 0;
 	pyExecutablePath = getPyExecutablePath();
 	pyIncludePath = getPyIncludePath(pyExecutablePath);
 	pyLibPath = getPyLibPath(pyExecutablePath);
 	pyVersion = getPyVersion(pyExecutablePath);
-
 end
 
 function executable = getPyExecutablePath()
-
 	SUCCESS = 0;
-	[success, executable] = system('cat ~/.matpyrc');
 
-	if success ~= SUCCESS
+	try
+		executable = fileread( fullfile( homeDir(), '.matpyrc' ) );
+	catch e
 		%Failed to find custom python, using systems
 
-		[success, executable] = system('which python');
+		if ispc
+			command = 'where python';
+		else
+			command = 'which python';
+		end
+		
+		[success, executable] = system(command);
 
 		if success ~= SUCCESS
 			error('Python could not be found');
 		end
 	end
-
+	
 	executable = strtrim(executable);
-
 end
 
 function pyVersion = getPyVersion(pyExecutablePath)
 	SUCCESS = 0;
 	[success pyVersion] = system([pyExecutablePath, ' -c "import platform; print(platform.python_version())"']);
-
 	if success ~= SUCCESS
 		error('Could not get version number of python');
 	end
@@ -95,18 +96,16 @@ end
 
 function pyLibPath = getPyLibPath(pyExecutablePath)
 	SUCCESS = 0;
-	[success, pyLibPath] = system([pyExecutablePath, ' -c "from distutils.sysconfig import get_python_lib; print(get_python_lib)()"']);
+	[success, pyLibPath] = system([pyExecutablePath, ' -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(False, True))"']);
 	if success ~= SUCCESS
 		error('Python lib could not be found');
-	end
-
-	tokens = splitBySlash(pyLibPath);
-	if strcmp(tokens(end), 'site-packages')
-		pyLibPath = ['/', fullfile(tokens{1:end-1})];
 	end
 	pyLibPath = strtrim(pyLibPath);
 end
 
-function tokens = splitBySlash(str)
-	tokens = strread(str, '%s', 'delimiter', '/');
+function path = homeDir
+	path = getenv('HOME');
+	if isempty( path )
+		path = [ getenv( 'HOMEDRIVE' ) getenv( 'HOMEPATH' ) ];
+	end
 end
