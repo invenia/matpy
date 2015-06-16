@@ -21,16 +21,20 @@
 %	var = py('get' 'name_of_var')
 
 function varargout = py(varargin)
-
 	lastWorkingDir = pwd;
 	cd(mfiledir);
 
-	[execPrefix pythonVersion] = getParsedPypath();
+	[pyExecutablePath, pyIncludePath, pyLibPath, pyVersion] = getPythonPaths();
+	pythonVersionNoBuildNumber = pyVersion(1:3);
 
-	PYINCLUDEDIR = ['-I', getPyIncludePath(execPrefix, pythonVersion)];
-	PYLIBPATH = ['-L', execPrefix, '/../lib/python', pythonVersion];
-	PYPATH = ['''-DPYPATH=\"', execPrefix, '/python', '\"'''];
-	CFLAGS = ['CFLAGS="\$CFLAGS ', ' -lpython2.7 ', PYPATH, '"'];
+	if ispc
+		pythonVersionNoBuildNumber = strrep( pythonVersionNoBuildNumber, '.', '' );
+	end
+
+	PYINCLUDEDIR = ['-I', pyIncludePath];
+	PYLIBPATH = ['-L', pyLibPath];
+	PYPATH = ['''-DPYPATH=\"', pyExecutablePath, '\"'''];
+	CFLAGS = ['CFLAGS="\$CFLAGS ', ' -lpython', pythonVersionNoBuildNumber, ' ', PYPATH, '"'];
 
 	try
 		mex('py.cpp', CFLAGS, '-Dchar16_t=uint16_T', PYINCLUDEDIR, PYLIBPATH);
@@ -44,53 +48,89 @@ function varargout = py(varargin)
 	[varargout{1:nargout}] = py(varargin{:});
 end
 
-function [execPrefix, pythonVersion] = getParsedPypath()
-	executable = getPypath();
-	pythonVersion = getPythonVersion(executable);
-	tokens = splitBySlash(executable);
-	execPrefix = ['/', fullfile(tokens{1:end-1})];
+function [pyExecutablePath, pyIncludePath, pyLibPath, pyVersion] = getPythonPaths()
+	pyExecutablePath = getPyExecutablePath();
+	pyIncludePath = getPyIncludePath(pyExecutablePath);
+	pyLibPath = getPyLibPath(pyExecutablePath);
+	pyVersion = getPyVersion(pyExecutablePath);
 end
 
-function tokens = splitBySlash(str)
-	tokens = strread(str, '%s', 'delimiter', '/');
-end
-
-function executable = getPypath()
-
+function executable = getPyExecutablePath()
 	SUCCESS = 0;
-	[success, executable] = system('cat ~/.matpyrc');
 
-	if success ~= SUCCESS
+	try
+		executable = fileread( fullfile( homeDir(), '.matpyrc' ) );
+	catch e
 		%Failed to find custom python, using systems
 
-		[success, executable] = system('which python');
+		if ispc
+			command = 'where python';
+		else
+			command = 'which python';
+		end
+		
+		[success, executable] = system(command);
 
 		if success ~= SUCCESS
 			error('Python could not be found');
 		end
 	end
-
+	
 	executable = strtrim(executable);
-
 end
 
-function pythonVersion = getPythonVersion(executable)
+function pyVersion = getPyVersion(pyExecutablePath)
 	SUCCESS = 0;
-	[success pythonVersion] = system([executable, ' -c "import platform; print(platform.python_version()[:3])"']);
-
+	[success pyVersion] = system([pyExecutablePath, ' -c "import platform; print(platform.python_version())"']);
 	if success ~= SUCCESS
 		error('Could not get version number of python');
 	end
-	pythonVersion = strtrim(pythonVersion);
+	pyVersion = strtrim(pyVersion);
 end
 
-function pyIncludePath = getPyIncludePath(execPrefix, pythonVersion)
-	pyIncludePath = [execPrefix, '/../include/python', pythonVersion];
+function pyIncludePath = getPyIncludePath(pyExecutablePath)
+	SUCCESS = 0;
+	[success, pyIncludePath] = system([pyExecutablePath, ' -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())"']);
+	if success ~= SUCCESS
+		error('Python include could not be found');
+	end
+	pyIncludePath = strtrim(pyIncludePath);
+end
 
-	result = exist(pyIncludePath, 'dir');
+function pyLibPath = getPyLibPath(pyExecutablePath)
+	SUCCESS = 0;
 
-	if(~result)
-		% there's a chance that the python include path has an m on the end of it
-		pyIncludePath = [pyIncludePath, 'm'];
+	if ispc
+		command = [pyExecutablePath, ' -c "from distutils.sysconfig import PREFIX; print(PREFIX)"'];
+	else
+		command = [pyExecutablePath, ' -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(False, True))"'];
+	end
+
+	[success, pyLibPath] = system(command);
+	if success ~= SUCCESS
+		error('Python lib could not be found');
+	end
+
+	pyLibPath = strtrim(pyLibPath);
+
+	if ispc
+		pyLibPath = fullfile( pyLibPath, 'libs' );
+	end
+end
+
+function path = homeDir
+	path = getenv('HOME');
+	if isempty( path )
+		path = [ getenv( 'HOMEDRIVE' ) getenv( 'HOMEPATH' ) ];
+	end
+end
+
+function dir = mfiledir
+	dir = '';
+
+	stack = dbstack( '-completenames' );
+	if numel( stack ) >= 2
+		mfilepath = stack(2).file;
+		dir = fileparts( mfilepath );
 	end
 end

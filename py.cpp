@@ -392,7 +392,7 @@ static mxArray* py2mat(PyObject *o) {
 		PyObject *items = PyDict_Values(o);
 		mwSize nfields = PyDict_Size(o);
 		mwSize nelem;
-		char *fieldNames[nfields];
+		char **fieldNames = (char **)mxMalloc(nfields * sizeof(char *));
 		int i, j;
 
 		for(i = 0; i < nfields; i++) {
