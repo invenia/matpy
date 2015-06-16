@@ -25,7 +25,7 @@ function varargout = py(varargin)
 	lastWorkingDir = pwd;
 	cd(mfiledir);
 
-	[pyExecutablePath, pyIncludePath, pyLibPath, pyVersion] = getPythonPaths()
+	[pyExecutablePath, pyIncludePath, pyLibPath, pyVersion] = getPythonPaths();
 	pythonVersionNoBuildNumber = pyVersion(1:3);
 
 	PYINCLUDEDIR = ['-I', pyIncludePath];
@@ -37,7 +37,6 @@ function varargout = py(varargin)
 		mex('py.cpp', CFLAGS, '-Dchar16_t=uint16_T', PYINCLUDEDIR, PYLIBPATH);
 	catch e
 		cd(lastWorkingDir);
-		sprintf('CFLAGS: %s\nPYINCLUDER: %s\nPYLIBPATH: %s\n', CFLAGS, PYINCLUDEDIR, PYLIBPATH)
 		rethrow(e);
 	end
 
