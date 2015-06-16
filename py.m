@@ -25,13 +25,12 @@ function varargout = py(varargin)
 	lastWorkingDir = pwd;
 	cd(mfiledir);
 
-	[execPrefix, pythonVersion] = getParsedPypath();
+	[pyExecutablePath, pyIncludePath, pyLibPath, pyVersion] = getPythonPaths()
+	pythonVersionNoBuildNumber = pyVersion(1:3);
 
-	pythonVersionNoBuildNumber = pythonVersion(1:3);
-
-	PYINCLUDEDIR = ['-I', getPyIncludePath(execPrefix, pythonVersion)];
-	PYLIBPATH = ['-L', execPrefix, '/../versions/', pythonVersion, '/lib/python', pythonVersionNoBuildNumber];
-	PYPATH = ['''-DPYPATH=\"', execPrefix, '/python', '\"'''];
+	PYINCLUDEDIR = ['-I', pyIncludePath];
+	PYLIBPATH = ['-L', pyLibPath];
+	PYPATH = ['''-DPYPATH=\"', pyExecutablePath, '\"'''];
 	CFLAGS = ['CFLAGS="\$CFLAGS ', ' -lpython', pythonVersionNoBuildNumber, ' ', PYPATH, '"'];
 
 	try
@@ -47,18 +46,17 @@ function varargout = py(varargin)
 	[varargout{1:nargout}] = py(varargin{:});
 end
 
-function [execPrefix, pythonVersion] = getParsedPypath()
-	executable = getPypath();
-	pythonVersion = getPythonVersion(executable);
-	tokens = splitBySlash(executable);
-	execPrefix = ['/', fullfile(tokens{1:end-1})];
+function [pyExecutablePath, pyIncludePath, pyLibPath, pyVersion] = getPythonPaths()
+	
+	SUCCESS = 0;
+	pyExecutablePath = getPyExecutablePath();
+	pyIncludePath = getPyIncludePath(pyExecutablePath);
+	pyLibPath = getPyLibPath(pyExecutablePath);
+	pyVersion = getPyVersion(pyExecutablePath);
+
 end
 
-function tokens = splitBySlash(str)
-	tokens = strread(str, '%s', 'delimiter', '/');
-end
-
-function executable = getPypath()
+function executable = getPyExecutablePath()
 
 	SUCCESS = 0;
 	[success, executable] = system('cat ~/.matpyrc');
@@ -77,24 +75,39 @@ function executable = getPypath()
 
 end
 
-function pythonVersion = getPythonVersion(executable)
+function pyVersion = getPyVersion(pyExecutablePath)
 	SUCCESS = 0;
-	[success pythonVersion] = system([executable, ' -c "import platform; print(platform.python_version())"']);
+	[success pyVersion] = system([pyExecutablePath, ' -c "import platform; print(platform.python_version())"']);
 
 	if success ~= SUCCESS
 		error('Could not get version number of python');
 	end
-	pythonVersion = strtrim(pythonVersion);
+	pyVersion = strtrim(pyVersion);
 end
 
-function pyIncludePath = getPyIncludePath(execPrefix, pythonVersion)
-	pythonVersionNoBuildNumber = pythonVersion(1:3);
-	pyIncludePath = [execPrefix, '/../versions/', pythonVersion, '/include/python', pythonVersionNoBuildNumber];
-
-	result = exist(pyIncludePath, 'dir');
-
-	if(~result)
-		% there's a chance that the python include path has an m on the end of it
-		pyIncludePath = [pyIncludePath, 'm'];
+function pyIncludePath = getPyIncludePath(pyExecutablePath)
+	SUCCESS = 0;
+	[success, pyIncludePath] = system([pyExecutablePath, ' -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())"']);
+	if success ~= SUCCESS
+		error('Python include could not be found');
 	end
+	pyIncludePath = strtrim(pyIncludePath);
+end
+
+function pyLibPath = getPyLibPath(pyExecutablePath)
+	SUCCESS = 0;
+	[success, pyLibPath] = system([pyExecutablePath, ' -c "from distutils.sysconfig import get_python_lib; print(get_python_lib)()"']);
+	if success ~= SUCCESS
+		error('Python lib could not be found');
+	end
+
+	tokens = splitBySlash(pyLibPath);
+	if strcmp(tokens(end), 'site-packages')
+		pyLibPath = ['/', fullfile(tokens{1:end-1})];
+	end
+	pyLibPath = strtrim(pyLibPath);
+end
+
+function tokens = splitBySlash(str)
+	tokens = strread(str, '%s', 'delimiter', '/');
 end
