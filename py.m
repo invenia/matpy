@@ -21,6 +21,7 @@
 %	var = py('get' 'name_of_var')
 
 function varargout = py(varargin)
+	mfiledir = fileparts( mfilepath );
 
 	lastWorkingDir = pwd;
 	cd(mfiledir);
