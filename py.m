@@ -28,6 +28,10 @@ function varargout = py(varargin)
 	[pyExecutablePath, pyIncludePath, pyLibPath, pyVersion] = getPythonPaths();
 	pythonVersionNoBuildNumber = pyVersion(1:3);
 
+	if ispc
+		pythonVersionNoBuildNumber = strrep( pythonVersionNoBuildNumber, '.', '' );
+	end
+
 	PYINCLUDEDIR = ['-I', pyIncludePath];
 	PYLIBPATH = ['-L', pyLibPath];
 	PYPATH = ['''-DPYPATH=\"', pyExecutablePath, '\"'''];
@@ -96,11 +100,23 @@ end
 
 function pyLibPath = getPyLibPath(pyExecutablePath)
 	SUCCESS = 0;
-	[success, pyLibPath] = system([pyExecutablePath, ' -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(False, True))"']);
+
+	if ispc
+		command = [pyExecutablePath, ' -c "from distutils.sysconfig import PREFIX; print(PREFIX)"'];
+	else
+		command = [pyExecutablePath, ' -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(False, True))"'];
+	end
+
+	[success, pyLibPath] = system(command);
 	if success ~= SUCCESS
 		error('Python lib could not be found');
 	end
+
 	pyLibPath = strtrim(pyLibPath);
+
+	if ispc
+		pyLibPath = fullfile( pyLibPath, 'libs' );
+	end
 end
 
 function path = homeDir
