@@ -21,8 +21,6 @@
 %	var = py('get' 'name_of_var')
 
 function varargout = py(varargin)
-	mfiledir = fileparts( mfilepath );
-
 	lastWorkingDir = pwd;
 	cd(mfiledir);
 
@@ -124,5 +122,15 @@ function path = homeDir
 	path = getenv('HOME');
 	if isempty( path )
 		path = [ getenv( 'HOMEDRIVE' ) getenv( 'HOMEPATH' ) ];
+	end
+end
+
+function dir = mfiledir
+	dir = '';
+
+	stack = dbstack( '-completenames' );
+	if numel( stack ) >= 2
+		mfilepath = stack(2).file;
+		dir = fileparts( mfilepath );
 	end
 end
