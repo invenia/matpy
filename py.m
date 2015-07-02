@@ -32,7 +32,7 @@ function varargout = py(varargin)
 	end
 
 	PYINCLUDEDIR = ['-I', pyIncludePath];
-	PYLIBPATH = ['-L', pyLibPath];
+	PYLIBPATH = ['-L', pyLibPath, '/..'];
 	PYPATH = ['''-DPYPATH=\"', pyExecutablePath, '\"'''];
 	CFLAGS = ['CFLAGS="\$CFLAGS ', ' -lpython', pythonVersionNoBuildNumber, ' -ldl ', PYPATH, '"'];
 
