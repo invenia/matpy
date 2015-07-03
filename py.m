@@ -32,9 +32,9 @@ function varargout = py(varargin)
 	end
 
 	PYINCLUDEDIR = ['-I', pyIncludePath];
-	PYLIBPATH = ['-L', pyLibPath];
+	PYLIBPATH = ['-L', fullfile( pyLibPath, '..' )];
 	PYPATH = ['''-DPYPATH=\"', pyExecutablePath, '\"'''];
-	CFLAGS = ['CFLAGS="\$CFLAGS ', ' -lpython', pythonVersionNoBuildNumber, ' ', PYPATH, '"'];
+	CFLAGS = ['CFLAGS="\$CFLAGS ', ' -lpython', pythonVersionNoBuildNumber, ' -ldl ', PYPATH, '"'];
 
 	try
 		mex('py.cpp', CFLAGS, '-Dchar16_t=uint16_T', PYINCLUDEDIR, PYLIBPATH);

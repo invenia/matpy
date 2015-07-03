@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #include <mex.h>
 #include <Python.h>
 #include <string.h>
-// #include <dlfcn.h>
+#include <dlfcn.h>
 
 static const char *pyObjectToString(PyObject *pyObject);
 static void addVariableToPython(const char* name, PyObject *value);
@@ -562,7 +562,7 @@ void mexFunction(int nlhs_, mxArray *plhs_[], int nrhs_, const mxArray *prhs_[])
 
 	if (!been_here) {
 		if (debug) mexPrintf("Initializing...\n");
-		// dlopen("libpython2.6.so", RTLD_LAZY |RTLD_GLOBAL);
+		dlopen("libpython2.7.so", RTLD_LAZY |RTLD_GLOBAL);
 		Py_SetProgramName((char*)PYPATH);
 		Py_Initialize();
 		initMatpyPrint();

@@ -44,7 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ## Python Version
 
-Currently, the only python version suppoted and testsed for is `python 2.7`.
+Currently, the only python version suppoted and testsed for is `python 2.7.9`.
 
 ## Types supported to Import and Export
 
@@ -67,8 +67,8 @@ Currently, the only python version suppoted and testsed for is `python 2.7`.
     - ex. s =
 
           1x2 struct array with fields:
-				f1
-				f2
+                f1
+                f2
 
           s(1) =
                 f1: 'v1'
@@ -202,7 +202,7 @@ py.cpp:27:10: fatal error: 'Python.h' file not found
 #include <Python.h>
           ^
 ```
-It is possible that your `which python` doesn't point to a specific python that we want. You may have to set in your ~/.bash_profile `export PYPATH=[path to .pyenv]/versions/2.7.9/bin/python` for example `export PYPATH=~/.pyenv/versions/2.7.9/bin/python` worked for me.
+It is possible that your `which python` doesn't point to a specific python that we want. You may have to set in your ~/.bash_profile `export PYPATH=[path to .pyenv]/versions/[your version]/bin/python` for example `export PYPATH=~/.pyenv/versions/2.7.9/bin/python` worked for me.
 
 ##### Warnings
 If your last line after compiling is,
@@ -216,3 +216,9 @@ then everything is working as should.
 ### Pointing to the right python
 
 By default, matpy will build with the systems default python. If you want it to reference a specific python, you'll need to make a file `~/.matpyrc` and set the python you want matlab to use (and only that string), for example I have `/Users/samuelmassinon/.pyenv/versions/2.7.9/bin/python` as the only line in my `~/.matpyrc` file.
+
+### -lpython[version] cannot be found
+
+Your python must link to the appropriate `.dylib` file. If you are using `pyenv` it is possible that you can install a version of python that does not include the `.dylib` file. To fix this, remove the version and then get the version of python using `env PYTHON_CONFIGURE_OPTS="--enable-shared" LD_LIBRARY_PATH=~/.pyenv/versions/[version]/lib/ pyenv install -k [version]`. For example, I used `env PYTHON_CONFIGURE_OPTS="--enable-shared" LD_LIBRARY_PATH=~/.pyenv/versions/2.7.9/lib/ pyenv install -k 2.7.9`.
+
+The `.dylib` file should be located in the `/lib` directory.
